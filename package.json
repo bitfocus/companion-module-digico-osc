@@ -1,0 +1,19 @@
+{
+	"name": "digico-osc",
+	"version": "0.0.1",
+	"api_version": "1.0.0",
+	"keywords": [
+		"Hardware",
+		"Sound"
+		],
+	"manufacturer": "DiGiCo",
+	"product": "osc support",
+	"shortname": "DiGiCo OSC",
+	"description": "DiGiCo plugin for Companion",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
+	"license": "MIT"
+}
