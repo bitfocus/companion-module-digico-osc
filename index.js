@@ -42,7 +42,15 @@ class instance extends instance_skel {
 			label:   'Target port',
 			width:   6,
 			regex:   this.REGEX_PORT,
-			default: '8000'
+			default: '8001'
+		},
+		{
+			type:    'textinput',
+			id:      'port',
+			label:   'Receive port',
+			width:   6,
+			regex:   this.REGEX_PORT,
+			default: '8002'
 		}
 	]
 	}
@@ -54,31 +62,43 @@ class instance extends instance_skel {
 
 		switch (id){
 			case 'fader':
-				arg = null;
-				cmd = `/sd/Input_Channels/${opt.channel}/fader ${opt.fader}`;
+				arg = [ {
+					type: "f",
+					value: opt.fader
+				}]
+				cmd = `/sd/Input_Channels/${opt.channel}/fader`;
 				break;
 
 			case 'mute':
-				arg = null;
-				cmd = `/sd/Input_Channels/${opt.channel}/mute ${opt.mute}`;
+				arg = [ {
+					type: "i",
+					value: opt.mute
+				}]
+				cmd = `/sd/Input_Channels/${opt.channel}/mute`;
 				break;
 
 			case 'phantom':
-				arg = null;
-				cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom ${opt.mute}`;
+				arg = [ {
+					type: "i",
+					value: opt.phantom
+				}]
+				cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
 				break;
 
 			case 'solo':
-				arg = null;
-				cmd = `/sd/Input_Channels/${opt.channel}/solo ${opt.solo}`
+				arg = [ {
+					type: "i",
+					value: opt.solo
+				}]
+				cmd = `/sd/Input_Channels/${opt.channel}/solo`
 		}
 
 		if (arg == null) {
 			arg = [];
 		}
 
-		debug('sending', cmd, arg, "to", self.config.host)
-		self.sendOSC(cmd, arg)
+		console.log('sending', cmd, arg, "to", this.config.host)
+		this.sendOSC(cmd, arg)
 
 	}
 
@@ -136,7 +156,7 @@ class instance extends instance_skel {
 		if (this.config.host) {
 			this.qSocket = new OSC.TCPSocketPort({
 				localAddress: "0.0.0.0",
-				localPort: this.config.port + this.port_offset,
+				localPort: this.config.receiveport,
 				address: this.config.host,
 				port: this.config.port,
 				metadata: true
@@ -156,7 +176,7 @@ class instance extends instance_skel {
 			});
 
 			this.qSocket.on("close", () => {
-				this.log('error', "Connection to QLab Closed");
+				this.log('error', "Connection to DiGiCo Closed");
 				this.connecting = false;
 				this.status(this.STATUS_WARNING, "CLOSED");
 			});
@@ -167,6 +187,7 @@ class instance extends instance_skel {
 			});
 
 			this.qSocket.on("message", (message) => {
+				console.log("Got message: ", message);
 				// debug("received ", message, "from", this.qSocket.options.address);
 				if (message.address.match(/^\/update\//)) {
 					// debug("readUpdate");
@@ -180,7 +201,7 @@ class instance extends instance_skel {
 			});
 		}
 		this.qSocket.on("data", (data) => {
-			debug ("Got",data, "from",this.qSocket.options.address);
+			console.log("Got: ",data, "from",this.qSocket.options.address);
 		});
 	}
 
