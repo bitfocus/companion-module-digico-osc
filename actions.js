@@ -116,5 +116,38 @@ exports.getActions  = function() {
 		}]
 	}
 
+	actions['snapshot'] = {
+		label: 'Fire snapshot',
+		options: [
+		{
+			label: 'number',
+			type: 'number',
+			id: 'snapshot',
+			default: 1,
+			min: 0,
+			max: 9999
+		}
+	]
+	}
+
+	actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
+	
+	actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
+
+
+	actions['macros'] = {
+		label: 'Macro',
+		options: [
+		{
+			label: 'number',
+			type: 'number',
+			id: 'macro',
+			default: 1,
+			min: 0,
+			max: 255
+		}
+	]
+	}
+
 	return actions
 }

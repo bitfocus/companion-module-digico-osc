@@ -72,7 +72,7 @@ class instance extends instance_skel {
 			case 'mute':
 				arg = [ {
 					type: "i",
-					value: opt.mute
+					value: parseInt(opt.mute)
 				}]
 				cmd = `/sd/Input_Channels/${opt.channel}/mute`;
 				break;
@@ -80,7 +80,7 @@ class instance extends instance_skel {
 			case 'phantom':
 				arg = [ {
 					type: "i",
-					value: opt.phantom
+					value: parseInt(opt.phantom)
 				}]
 				cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
 				break;
@@ -88,22 +88,55 @@ class instance extends instance_skel {
 			case 'solo':
 				arg = [ {
 					type: "i",
-					value: opt.solo
+					value: parseInt(opt.solo)
 				}]
 				cmd = `/sd/Input_Channels/${opt.channel}/solo`
+				break;
+
+			case 'snapshot':
+				arg = [ {
+					type: "i",
+					value: parseInt(opt.snapshot)
+				}]
+				cmd = '/sd/Snapshots/Fire_Snapshot_number'
+				break;
+
+				case 'snapshotNext':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/sd/Snapshots/Fire_Next_Snapshot'
+					break;
+
+				case 'snapshotPrev':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/sd/Snapshots/Fire_Prev_Snapshot'
+					break;
+
+				case 'macros':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.macro)
+					}]
+					cmd = '/sd/Macros/Buttons/press'
+					break;
+
 		}
 
 		if (arg == null) {
 			arg = [];
 		}
 
-		console.log('sending', cmd, arg, "to", this.config.host)
 		this.sendOSC(cmd, arg)
 
 	}
 
 	destroy() {
-		self.status(self.STATUS_UNKNOWN,"Disabled")
+		this.status(this.STATUS_UNKNOWN,"Disabled")
 		debug("destroy", this.id)
 	}
 
@@ -134,13 +167,12 @@ class instance extends instance_skel {
 			// { name: 'dynamic2', label: 'dynamic var2' },
 		]
 
-		this.setVariableDefinitions(variables)
+		// this.setVariableDefinitions(variables)
 
 	}
 
 	connect() {
 		this.status(this.STATUS_UNKNOWN, "Connecting");
-		this.init_osc();
 	}
 
 	init_osc() {
@@ -154,7 +186,7 @@ class instance extends instance_skel {
 		}
 
 		if (this.config.host) {
-			this.qSocket = new OSC.TCPSocketPort({
+			this.qSocket = new OSC.UDPPort({
 				localAddress: "0.0.0.0",
 				localPort: this.config.receiveport,
 				address: this.config.host,
@@ -187,22 +219,28 @@ class instance extends instance_skel {
 			});
 
 			this.qSocket.on("message", (message) => {
-				console.log("Got message: ", message);
-				// debug("received ", message, "from", this.qSocket.options.address);
-				if (message.address.match(/^\/update\//)) {
-					// debug("readUpdate");
-					this.readUpdate(message);
-				} else if (message.address.match(/^\/reply\//)) {
-					// debug("readReply");
-					this.readReply(message);
-				} else {
-					debug(message.address, message.args);
-				}
+				this.processMessage(message)
+
 			});
 		}
 		this.qSocket.on("data", (data) => {
-			console.log("Got: ",data, "from",this.qSocket.options.address);
+			// console.log("Got: ",data, "from",this.qSocket.options.address);
 		});
+	}
+
+	processMessage(message) {
+		console.log("Got address: ", message.address);
+		console.log("Got args: ", message.args);
+		// { address: '/sd/Group_Outputs/10/mute',args: [ { type: 'i', value: 1 } ] }
+		// Got address:  /sd/Input_Channels/4/mute
+		// Got args:  [ { type: 'i', value: 1 } ]
+
+			if (message.address.match('mute')) {
+				//do stuff
+				// this.setVariable('currentColumn', message.args[0].value)
+		} else {
+			debug(message.address, message.args);
+		}
 	}
 
 	sendOSC(node, arg) {
