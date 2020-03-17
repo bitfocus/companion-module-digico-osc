@@ -1,9 +1,10 @@
 var instance_skel = require('../../instance_skel');
 var actions       = require('./actions');
 var OSC           = require('osc');
-
+var test = { address: '/sd/Input_Channels/10/mute',args: [ { type: 'i', value: 0 } ] }
 var debug;
 var log;
+let states = {};
 
 class instance extends instance_skel {
 
@@ -118,11 +119,12 @@ class instance extends instance_skel {
 					break;
 
 				case 'macros':
-					arg = [ {
-						type: "i",
-						value: parseInt(opt.macro)
-					}]
-					cmd = '/sd/Macros/Buttons/press'
+					// arg = [ {
+					// 	type: "i",
+					// 	value: parseInt(opt.macro)
+					// }]
+					// cmd = '/sd/Macros/Buttons/press'
+					this.processMessage(test)
 					break;
 
 		}
@@ -133,6 +135,78 @@ class instance extends instance_skel {
 
 		this.sendOSC(cmd, arg)
 
+	}
+
+	init_feedbacks() {
+			var feedbacks = {}
+
+			feedbacks['solo_bg'] = {
+				label: 'Change colors for solo state',
+				description: 'If chanel solo is in use, change colors of the bank',
+				options: [
+					{
+						type: 'colorpicker',
+						label: 'Foreground color',
+						id: 'fg',
+						default: self.rgb(255, 255, 255)
+					},
+					{
+						type: 'colorpicker',
+						label: 'Background color',
+						id: 'bg',
+						default: self.rgb(0, 255, 0)
+					},
+					{
+						type: 'dropdown',
+						label: 'solo',
+						id: 'solo',
+						default: 1,
+						choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
+					}
+				]
+			}
+			feedbacks['mute_bg'] = {
+				label: 'Change colors for mute state',
+				description: 'If chanel mute is active, change colors of the bank',
+				options: [
+					{
+						type: 'colorpicker',
+						label: 'Foreground color',
+						id: 'fg',
+						default: self.rgb(255, 255, 255)
+					},
+					{
+						type: 'colorpicker',
+						label: 'Background color',
+						id: 'bg',
+						default: self.rgb(0, 255, 0)
+					},
+					{
+						type: 'dropdown',
+						label: 'mute',
+						id: 'mute',
+						default: 1,
+						choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
+					}
+				]
+			}
+			self.setFeedbackDefinitions(feedbacks)
+	}
+
+	feedback(feedback, bank) {
+
+		if (feedback.type === 'solo_bg') {
+			if (states[channelNumber].mute === parseInt(feedback.options.solo)) {
+				return { color: feedback.options.fg, bgcolor: feedback.options.bg }
+			}
+		}
+		if (feedback.type === 'mute_bg') {
+			if (states[channelNumber].mute === parseInt(feedback.options.mute)) {
+				return { color: feedback.options.fg, bgcolor: feedback.options.bg }
+			}
+		}
+
+		return {}
 	}
 
 	destroy() {
@@ -234,10 +308,17 @@ class instance extends instance_skel {
 		// { address: '/sd/Group_Outputs/10/mute',args: [ { type: 'i', value: 1 } ] }
 		// Got address:  /sd/Input_Channels/4/mute
 		// Got args:  [ { type: 'i', value: 1 } ]
-
-			if (message.address.match('mute')) {
-				//do stuff
-				// this.setVariable('currentColumn', message.args[0].value)
+		let address = message.address
+		let args = message.args
+		let channelNumber
+		if (address.match('/sd/Input_Channels/')) {
+			if(address.slice(-4) == 'mute') {
+				channelNumber = address.slice(19,-5)
+				console.log('Channel: '+channelNumber);
+			}
+			states[channelNumber] = { mute : args[0].value };
+			console.log(`Channel ${channelNumber} is now ${states[channelNumber].mute}`);
+			// this.setVariable('currentColumn', message.args[0].value)
 		} else {
 			debug(message.address, message.args);
 		}
