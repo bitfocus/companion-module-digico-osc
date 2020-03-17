@@ -222,10 +222,11 @@ class instance extends instance_skel {
 				this.processMessage(message)
 
 			});
+
+			this.qSocket.on("data", (data) => {
+				// console.log("Got: ",data, "from",this.qSocket.options.address);
+			});
 		}
-		this.qSocket.on("data", (data) => {
-			// console.log("Got: ",data, "from",this.qSocket.options.address);
-		});
 	}
 
 	processMessage(message) {
