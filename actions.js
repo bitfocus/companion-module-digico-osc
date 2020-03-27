@@ -131,7 +131,7 @@ exports.getActions  = function() {
 	}
 
 	actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
-	
+
 	actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
 
 
@@ -143,7 +143,7 @@ exports.getActions  = function() {
 			type: 'number',
 			id: 'macro',
 			default: 1,
-			min: 0,
+			min: 1,
 			max: 255
 		}
 	]

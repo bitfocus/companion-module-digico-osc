@@ -120,7 +120,7 @@ class instance extends instance_skel {
 				case 'macros':
 					arg = [ {
 						type: "i",
-						value: parseInt(opt.macro)
+						value: parseInt(opt.macro)-1,
 					}]
 					cmd = '/sd/Macros/Buttons/press'
 					break;
