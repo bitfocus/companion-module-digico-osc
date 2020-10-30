@@ -12,7 +12,7 @@ class instance extends instance_skel {
 
 		Object.assign(this, {...actions})
 
-		this.actions()
+		this.actions();
 	}
 
 	actions(system) {
@@ -51,6 +51,13 @@ class instance extends instance_skel {
 			width:   6,
 			regex:   this.REGEX_PORT,
 			default: '8002'
+		},
+		{
+			type:    'dropdown',
+			id:      'series',
+			label:   'Model',
+			choices: [{id: "Quantum", label: "Quantum"}, {id: "S", label: "S-series"}, {id: "SD", label: "SD-range"}],
+			default: 'SD'
 		}
 	]
 	}
@@ -124,7 +131,29 @@ class instance extends instance_skel {
 					}]
 					cmd = '/sd/Macros/Buttons/press'
 					break;
+					
+				case 'snapshotS':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = `/digico/snapshots/fire`;
+					break;
+				case 'snapshotNextS':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/digico/snapshots/fire/next'
+					break;
 
+				case 'snapshotPrevS':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/digico/snapshots/fire/previous'
+					break;
 		}
 
 		if (arg == null) {
@@ -146,7 +175,7 @@ class instance extends instance_skel {
 
 		this.init_osc();
 
-		this.init_variables()
+		// this.init_variables()
 
 		this.status(this.STATE_OK)
 

@@ -1,6 +1,7 @@
 exports.getActions  = function() {
 
-	var actions = {}
+	let actions = [];
+	actions.length = 0;
 	let CHOICES_CHANNELS =[]
 	for (var i = 1; i < 145; i++) {
 		CHOICES_CHANNELS.push({ label: `ch ${i}`, id: i})
@@ -40,114 +41,136 @@ exports.getActions  = function() {
 		{ label: '-50 db', id: 0.125},
 		{ label: 'OFF', id: 0}
 	]
-	actions['fader'] = {
-		label: 'Set fader of channel',
-		options: [
-		{
-			label: 'channel number',
-			type: 'dropdown',
-			id: 'channel',
-			default: '1',
-			choices: CHOICES_CHANNELS
-		},
-		{
-			label: 'fader value',
-			type: 'dropdown',
-			id: 'fader',
-			default: 0.75,
-			choices: CHOICES_FADER
-		}]
-	}
+	
+	if(this.config.series == "S") {
 
-	actions['mute'] = {
-		label: 'Mute channel',
-		options: [
-		{
-			label: 'channel number',
-			type: 'dropdown',
-			id: 'channel',
-			default: 1,
-			choices: CHOICES_CHANNELS
-		},
-		{
-			label: 'mute on/off',
-			type: 'dropdown',
-			id: 'mute',
-			default: '1',
-			choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
-		}]
-	}
-
-	actions['phantom'] = {
-		label: 'Phantom channel',
-		options: [
-		{
-			label: 'channel number',
-			type: 'dropdown',
-			id: 'channel',
-			default: 1,
-			choices: CHOICES_CHANNELS
-		},
-		{
-			label: 'Phantom on/off',
-			type: 'dropdown',
-			id: 'phantom',
-			default: '1',
-			choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
-		}]
-	}
-
-	actions['solo'] = {
-		label: 'Solo channel',
-		options: [
-		{
-			label: 'channel number',
-			type: 'dropdown',
-			id: 'channel',
-			default: 1,
-			choices: CHOICES_CHANNELS
-		},
-		{
-			label: 'Solo on/off',
-			type: 'dropdown',
-			id: 'solo',
-			default: '1',
-			choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
-		}]
-	}
-
-	actions['snapshot'] = {
-		label: 'Fire snapshot',
-		options: [
-		{
-			label: 'number',
-			type: 'number',
-			id: 'snapshot',
-			default: 1,
-			min: 0,
-			max: 9999
+		actions['snapshotS'] = {
+			label: 'Fire snapshot S-series',
+			options: [
+				{
+					label: 'number',
+					type: 'number',
+					id: 'snapshot',
+					default: 1,
+					min: 0,
+					max: 9999
+				}
+			]
 		}
-	]
-	}
 
-	actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
+		actions['snapshotNextS'] = {	label: 'Fire next snapshot S-series'	}
+		
+		actions['snapshotPrevS'] = {	label: 'Fire previous snapshot S-series'	}
+	} else {
 
-	actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
-
-
-	actions['macros'] = {
-		label: 'Macro',
-		options: [
-		{
-			label: 'number',
-			type: 'number',
-			id: 'macro',
-			default: 1,
-			min: 1,
-			max: 255
+		actions['fader'] = {
+			label: 'Set fader of channel',
+			options: [
+			{
+				label: 'channel number',
+				type: 'dropdown',
+				id: 'channel',
+				default: '1',
+				choices: CHOICES_CHANNELS
+			},
+			{
+				label: 'fader value',
+				type: 'dropdown',
+				id: 'fader',
+				default: 0.75,
+				choices: CHOICES_FADER
+			}]
 		}
-	]
-	}
+	
+		actions['mute'] = {
+			label: 'Mute channel',
+			options: [
+			{
+				label: 'channel number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_CHANNELS
+			},
+			{
+				label: 'mute on/off',
+				type: 'dropdown',
+				id: 'mute',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
+	
+		actions['phantom'] = {
+			label: 'Phantom channel',
+			options: [
+			{
+				label: 'channel number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_CHANNELS
+			},
+			{
+				label: 'Phantom on/off',
+				type: 'dropdown',
+				id: 'phantom',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
+	
+		actions['solo'] = {
+			label: 'Solo channel',
+			options: [
+			{
+				label: 'channel number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_CHANNELS
+			},
+			{
+				label: 'Solo on/off',
+				type: 'dropdown',
+				id: 'solo',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
 
+		actions['snapshot'] = {
+			label: 'Fire snapshot',
+			options: [
+				{
+					label: 'number',
+					type: 'number',
+					id: 'snapshot',
+					default: 1,
+					min: 0,
+					max: 9999
+				}
+			]
+		}
+		
+		actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
+		
+		actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
+		
+		
+		actions['macros'] = {
+			label: 'Macro',
+			options: [
+				{
+					label: 'number',
+					type: 'number',
+					id: 'macro',
+					default: 1,
+					min: 1,
+					max: 255
+				}
+			]
+		}
+	}
 	return actions
 }
