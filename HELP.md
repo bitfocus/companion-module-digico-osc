@@ -12,3 +12,5 @@
 * Fire Macro (0-255)
 
 Would like some more? Just ask on Github.
+
+> Make sure you have the OSC file from your dealer. Otherwise not all of the commands won't work.
