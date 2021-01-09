@@ -1,6 +1,6 @@
 # Help for the DiGiCo module
 
-** Folowing commands are supported:
+** Folowing commands are supported (might be different per model/series):
 
 * Mute channel
 * Solo channel
@@ -13,4 +13,4 @@
 
 Would like some more? Just ask on Github.
 
-> Make sure you have the OSC file from your dealer. Otherwise not all of the commands won't work.
+> Make sure you have loaded the iPad OSC file in the desk, or a custom OSC from your dealer. Otherwise not all of the commands won't work.

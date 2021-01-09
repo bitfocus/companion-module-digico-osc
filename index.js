@@ -66,48 +66,115 @@ class instance extends instance_skel {
 		let id = action.action;
 		let cmd, arg
 		let opt = action.options;
+		
+		if(this.config.series == "SD") {
+			switch (id){
+				case 'fader':
+					arg = [ {
+						type: "f",
+						value: opt.fader
+					}]
+					cmd = `/Input_Channels/${opt.channel}/fader`;
+					break;
+	
+				case 'mute':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.mute)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/mute`;
+					break;
+	
+				case 'phantom':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.phantom)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/Channel_Input/phantom`;
+					break;
+	
+				case 'solo':
+					arg = [ {
+						type: "f",
+						value: parseInt(opt.solo)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/solo`
+					break;
+	
+				case 'snapshot':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = '/Snapshots/Fire_Snapshot_number'
+					break;
+	
+				case 'snapshotNext':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/Snapshots/Fire_Next_Snapshot'
+					break;
 
-		switch (id){
-			case 'fader':
-				arg = [ {
-					type: "f",
-					value: opt.fader
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/fader`;
-				break;
+				case 'snapshotPrev':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/Snapshots/Fire_Prev_Snapshot'
+					break;
 
-			case 'mute':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.mute)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/mute`;
-				break;
-
-			case 'phantom':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.phantom)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
-				break;
-
-			case 'solo':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.solo)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/solo`
-				break;
-
-			case 'snapshot':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.snapshot)
-				}]
-				cmd = '/sd/Snapshots/Fire_Snapshot_number'
-				break;
-
+				case 'macros':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.macro)-1,
+					}]
+					cmd = '/Macros/Buttons/press'
+					break;
+			}
+		} else if (this.config.series == "Quantum") {
+			switch (id){
+				case 'fader':
+					arg = [ {
+						type: "f",
+						value: opt.fader
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/fader`;
+					break;
+	
+				case 'mute':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.mute)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/mute`;
+					break;
+	
+				case 'phantom':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.phantom)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
+					break;
+	
+				case 'solo':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.solo)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/solo`
+					break;
+	
+				case 'snapshot':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = '/sd/Snapshots/Fire_Snapshot_number'
+					break;
+	
 				case 'snapshotNext':
 					arg = [ {
 						type: "i",
@@ -131,7 +198,9 @@ class instance extends instance_skel {
 					}]
 					cmd = '/sd/Macros/Buttons/press'
 					break;
-					
+			}	
+		} else if (this.config.series == "S") {
+			switch(id) {
 				case 'snapshotS':
 					arg = [ {
 						type: "i",
@@ -146,7 +215,7 @@ class instance extends instance_skel {
 					}]
 					cmd = '/digico/snapshots/fire/next'
 					break;
-
+	
 				case 'snapshotPrevS':
 					arg = [ {
 						type: "i",
@@ -154,8 +223,11 @@ class instance extends instance_skel {
 					}]
 					cmd = '/digico/snapshots/fire/previous'
 					break;
+			}
+		} else {
+			cmd = '';
 		}
-
+		
 		if (arg == null) {
 			arg = [];
 		}
