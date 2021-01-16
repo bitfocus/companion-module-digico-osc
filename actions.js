@@ -41,6 +41,43 @@ exports.getActions  = function() {
 		{ label: '-50 db', id: 0.125},
 		{ label: 'OFF', id: 0}
 	]
+    const CHOICES_FADER_IPAD = [
+		{ label: '+10 db', id: 10},
+		{ label: '+9 db', id: 9},
+		{ label: '+8 db', id: 8},
+		{ label: '+7 db', id: 7},
+		{ label: '+6 db', id: 6},
+		{ label: '+5 db', id: 5},
+		{ label: '+4 db', id: 4},
+		{ label: '+3 db', id: 3},
+		{ label: '+2 db', id: 2},
+		{ label: '+1 db', id: 1},
+		{ label: '0 db', id: 0},
+		{ label: '-1 db', id: -1},
+		{ label: '-2 db', id: -2},
+		{ label: '-3 db', id: -3},
+		{ label: '-4 db', id: -4},
+		{ label: '-5 db', id: -5},
+		{ label: '-6 db', id: -6},
+		{ label: '-7 db', id: -7},
+		{ label: '-8 db', id: -8},
+		{ label: '-9 db', id: -9},
+		{ label: '-10 db', id: -10},
+		{ label: '-12 db', id: -12},
+		{ label: '-14 db', id: -14},
+		{ label: '-16 db', id: -16},
+		{ label: '-18 db', id: -18},
+		{ label: '-20 db', id: -20},
+		{ label: '-22 db', id: -22},
+		{ label: '-24 db', id: -24},
+		{ label: '-26 db', id: -26},
+		{ label: '-28 db', id: -28},
+		{ label: '-30 db', id: -30},
+		{ label: '-40 db', id: -40},
+		{ label: '-50 db', id: -50},
+		{ label: '-66 db', id: -66},
+		{ label: 'OFF', id: -150}
+	]
 	
 	if(this.config.series == "S") {
 
@@ -63,7 +100,8 @@ exports.getActions  = function() {
 		actions['snapshotPrevS'] = {	label: 'Fire previous snapshot S-series'	}
 	} else {
 
-		actions['fader'] = {
+		if(this.config.series == "OSC") {
+            actions['fader'] = {
 			label: 'Set fader of channel',
 			options: [
 			{
@@ -81,6 +119,27 @@ exports.getActions  = function() {
 				choices: CHOICES_FADER
 			}]
 		}
+        }
+        else {
+        actions['fader'] = {
+			label: 'Set fader of channel',
+			options: [
+			{
+				label: 'channel number',
+				type: 'dropdown',
+				id: 'channel',
+				default: '1',
+				choices: CHOICES_CHANNELS
+			},
+			{
+				label: 'fader value',
+				type: 'dropdown',
+				id: 'fader',
+				default: 0,
+				choices: CHOICES_FADER_IPAD
+			}]
+		}
+        }
 	
 		actions['mute'] = {
 			label: 'Mute channel',
