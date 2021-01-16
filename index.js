@@ -27,7 +27,7 @@ class instance extends instance_skel {
 			id:      'info',
 			width:   12,
 			label:   'Information',
-			value:   'This controls the DiGiCo.'
+			value:   'This controls the DiGiCo console using the dealer provided OSC command set, the built in Ipad command set or S-Series commands.'
 		},
 		{
 			type:    'textinput',
@@ -55,9 +55,9 @@ class instance extends instance_skel {
 		{
 			type:    'dropdown',
 			id:      'series',
-			label:   'Model',
-			choices: [{id: "Quantum", label: "Quantum"}, {id: "S", label: "S-series"}, {id: "SD", label: "SD-range"}],
-			default: 'SD'
+			label:   'Command Set',
+			choices: [{id: "OSC", label: "OSC"}, {id: "IPAD", label: "IPAD"}, {id: "S", label: "S-Range"}],
+			default: 'IPAD'
 		}
 	]
 	}
@@ -67,7 +67,7 @@ class instance extends instance_skel {
 		let cmd, arg
 		let opt = action.options;
 		
-		if(this.config.series == "SD") {
+		if(this.config.series == "IPAD") {
 			switch (id){
 				case 'fader':
 					arg = [ {
@@ -87,7 +87,7 @@ class instance extends instance_skel {
 	
 				case 'phantom':
 					arg = [ {
-						type: "i",
+						type: "f",
 						value: parseInt(opt.phantom)
 					}]
 					cmd = `/Input_Channels/${opt.channel}/Channel_Input/phantom`;
@@ -133,7 +133,7 @@ class instance extends instance_skel {
 					cmd = '/Macros/Buttons/press'
 					break;
 			}
-		} else if (this.config.series == "Quantum") {
+		} else if (this.config.series == "OSC") {
 			switch (id){
 				case 'fader':
 					arg = [ {
