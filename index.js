@@ -1,10 +1,11 @@
 var instance_skel = require('../../instance_skel');
 var actions       = require('./actions');
 var OSC           = require('osc');
-var test = { address: '/sd/Input_Channels/10/mute',args: [ { type: 'i', value: 0 } ] }
+
 var debug;
 var log;
 let states = {};
+let channelNumber;
 
 class instance extends instance_skel {
 
@@ -13,7 +14,7 @@ class instance extends instance_skel {
 
 		Object.assign(this, {...actions})
 
-		this.actions()
+		this.actions();
 	}
 
 	actions(system) {
@@ -28,7 +29,7 @@ class instance extends instance_skel {
 			id:      'info',
 			width:   12,
 			label:   'Information',
-			value:   'This controls the DiGiCo.'
+			value:   'This controls the DiGiCo console using the dealer provided OSC command set, the built in Ipad command set or S-Series commands.'
 		},
 		{
 			type:    'textinput',
@@ -52,6 +53,13 @@ class instance extends instance_skel {
 			width:   6,
 			regex:   this.REGEX_PORT,
 			default: '8002'
+		},
+		{
+			type:    'dropdown',
+			id:      'series',
+			label:   'Command Set',
+			choices: [{id: "OSC", label: "OSC"}, {id: "IPAD", label: "IPAD"}, {id: "S", label: "S-Range"}],
+			default: 'IPAD'
 		}
 	]
 	}
@@ -61,46 +69,113 @@ class instance extends instance_skel {
 		let cmd, arg
 		let opt = action.options;
 
-		switch (id){
-			case 'fader':
-				arg = [ {
-					type: "f",
-					value: opt.fader
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/fader`;
-				break;
+		if(this.config.series == "IPAD") {
+			switch (id){
+				case 'fader':
+					arg = [ {
+						type: "f",
+						value: opt.fader
+					}]
+					cmd = `/Input_Channels/${opt.channel}/fader`;
+					break;
 
-			case 'mute':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.mute)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/mute`;
-				break;
+				case 'mute':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.mute)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/mute`;
+					break;
 
-			case 'phantom':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.phantom)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
-				break;
+				case 'phantom':
+					arg = [ {
+						type: "f",
+						value: parseInt(opt.phantom)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/Channel_Input/phantom`;
+					break;
 
-			case 'solo':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.solo)
-				}]
-				cmd = `/sd/Input_Channels/${opt.channel}/solo`
-				break;
+				case 'solo':
+					arg = [ {
+						type: "f",
+						value: parseInt(opt.solo)
+					}]
+					cmd = `/Input_Channels/${opt.channel}/solo`
+					break;
 
-			case 'snapshot':
-				arg = [ {
-					type: "i",
-					value: parseInt(opt.snapshot)
-				}]
-				cmd = '/sd/Snapshots/Fire_Snapshot_number'
-				break;
+				case 'snapshot':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = '/Snapshots/Fire_Snapshot_number'
+					break;
+
+				case 'snapshotNext':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/Snapshots/Fire_Next_Snapshot'
+					break;
+
+				case 'snapshotPrev':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/Snapshots/Fire_Prev_Snapshot'
+					break;
+
+				case 'macros':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.macro)-1,
+					}]
+					cmd = '/Macros/Buttons/press'
+					break;
+			}
+		} else if (this.config.series == "OSC") {
+			switch (id){
+				case 'fader':
+					arg = [ {
+						type: "f",
+						value: opt.fader
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/fader`;
+					break;
+
+				case 'mute':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.mute)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/mute`;
+					break;
+
+				case 'phantom':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.phantom)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
+					break;
+
+				case 'solo':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.solo)
+					}]
+					cmd = `/sd/Input_Channels/${opt.channel}/solo`
+					break;
+
+				case 'snapshot':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = '/sd/Snapshots/Fire_Snapshot_number'
+					break;
 
 				case 'snapshotNext':
 					arg = [ {
@@ -119,14 +194,40 @@ class instance extends instance_skel {
 					break;
 
 				case 'macros':
-					// arg = [ {
-					// 	type: "i",
-					// 	value: parseInt(opt.macro)
-					// }]
-					// cmd = '/sd/Macros/Buttons/press'
-					this.processMessage(test)
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.macro)-1,
+					}]
+					cmd = '/sd/Macros/Buttons/press'
+					break;
+			}
+		} else if (this.config.series == "S") {
+			switch(id) {
+				case 'snapshotS':
+					arg = [ {
+						type: "i",
+						value: parseInt(opt.snapshot)
+					}]
+					cmd = `/digico/snapshots/fire`;
+					break;
+				case 'snapshotNextS':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/digico/snapshots/fire/next'
 					break;
 
+				case 'snapshotPrevS':
+					arg = [ {
+						type: "i",
+						value: 0
+					}]
+					cmd = '/digico/snapshots/fire/previous'
+					break;
+			}
+		} else {
+			cmd = '';
 		}
 
 		if (arg == null) {
@@ -138,71 +239,50 @@ class instance extends instance_skel {
 	}
 
 	init_feedbacks() {
-			var feedbacks = {}
+		var feedbacks = {};
+		let self = this;
 
-			feedbacks['solo_bg'] = {
-				label: 'Change colors for solo state',
-				description: 'If chanel solo is in use, change colors of the bank',
-				options: [
-					{
-						type: 'colorpicker',
-						label: 'Foreground color',
-						id: 'fg',
-						default: self.rgb(255, 255, 255)
-					},
-					{
-						type: 'colorpicker',
-						label: 'Background color',
-						id: 'bg',
-						default: self.rgb(0, 255, 0)
-					},
-					{
-						type: 'dropdown',
-						label: 'solo',
-						id: 'solo',
-						default: 1,
-						choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
-					}
-				]
-			}
-			feedbacks['mute_bg'] = {
-				label: 'Change colors for mute state',
-				description: 'If chanel mute is active, change colors of the bank',
-				options: [
-					{
-						type: 'colorpicker',
-						label: 'Foreground color',
-						id: 'fg',
-						default: self.rgb(255, 255, 255)
-					},
-					{
-						type: 'colorpicker',
-						label: 'Background color',
-						id: 'bg',
-						default: self.rgb(0, 255, 0)
-					},
-					{
-						type: 'dropdown',
-						label: 'mute',
-						id: 'mute',
-						default: 1,
-						choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
-					}
-				]
-			}
-			self.setFeedbackDefinitions(feedbacks)
+		feedbacks['macro_bg'] = {
+			label: 'Change colors for macro state',
+			description: 'If macro is active, change colors of the bank',
+			options: [
+				{
+					type: 'colorpicker',
+					label: 'Foreground color',
+					id: 'fg',
+					default: self.rgb(255, 255, 255)
+				},
+				{
+					type: 'colorpicker',
+					label: 'Background color',
+					id: 'bg',
+					default: self.rgb(0, 255, 0)
+				},
+				{
+					type: 'dropdown',
+					label: 'State',
+					id: 'state',
+					default: 1,
+					choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
+				},
+				{
+					type: 'textinput',
+					label: 'Macro',
+					id: 'macro',
+					default: 1,
+					regex: self.REGEX_NUMBER
+				}
+			],
+		}
+		self.setFeedbackDefinitions(feedbacks);
 	}
 
 	feedback(feedback, bank) {
-
-		if (feedback.type === 'solo_bg') {
-			if (states[channelNumber].mute === parseInt(feedback.options.solo)) {
-				return { color: feedback.options.fg, bgcolor: feedback.options.bg }
-			}
-		}
-		if (feedback.type === 'mute_bg') {
-			if (states[channelNumber].mute === parseInt(feedback.options.mute)) {
-				return { color: feedback.options.fg, bgcolor: feedback.options.bg }
+		if (feedback.type === 'macro_bg') {
+			if (parseInt(channelNumber) === parseInt(feedback.options.macro)) {
+				if (states[channelNumber].status === parseInt(feedback.options.state)) {
+					return { color: feedback.options.fg, bgcolor: feedback.options.bg }
+				}
 			}
 		}
 
@@ -219,8 +299,9 @@ class instance extends instance_skel {
 		log = this.log;
 
 		this.init_osc();
+		this.init_feedbacks();
 
-		this.init_variables()
+		// this.init_variables()
 
 		this.status(this.STATE_OK)
 
@@ -293,31 +374,28 @@ class instance extends instance_skel {
 			});
 
 			this.qSocket.on("message", (message) => {
-				this.processMessage(message)
+				this.processMessage(message);
+				this.checkFeedbacks('macro_bg');
 
 			});
+
+			this.qSocket.on("data", (data) => {
+				// console.log("Got: ",data, "from",this.qSocket.options.address);
+			});
 		}
-		this.qSocket.on("data", (data) => {
-			// console.log("Got: ",data, "from",this.qSocket.options.address);
-		});
 	}
 
 	processMessage(message) {
 		console.log("Got address: ", message.address);
 		console.log("Got args: ", message.args);
-		// { address: '/sd/Group_Outputs/10/mute',args: [ { type: 'i', value: 1 } ] }
-		// Got address:  /sd/Input_Channels/4/mute
+		// { address: '//Group_Outputs/10/mute',args: [ { type: 'i', value: 1 } ] }
+		// Got address:  /Input_Channels/4/mute
 		// Got args:  [ { type: 'i', value: 1 } ]
 		let address = message.address
 		let args = message.args
-		let channelNumber
-		if (address.match('/sd/Input_Channels/')) {
-			if(address.slice(-4) == 'mute') {
-				channelNumber = address.slice(19,-5)
-				console.log('Channel: '+channelNumber);
-			}
-			states[channelNumber] = { mute : args[0].value };
-			console.log(`Channel ${channelNumber} is now ${states[channelNumber].mute}`);
+		if (address.match('/Macros/Buttons/state')) {
+			channelNumber = args[0].value +1;
+			states[channelNumber] = { status : args[1].value};
 			// this.setVariable('currentColumn', message.args[0].value)
 		} else {
 			debug(message.address, message.args);
