@@ -385,8 +385,10 @@ class instance extends instance_skel {
 		let address = message.address
 		let args    = message.args
 		if (address.match('/Macros/Buttons/state')) {
+			if (args.length >= 2) {
 		let chanNumber = args[0].value +1;
 		states[chanNumber] = { status : args[1].value};
+	}
 		} else {
 			debug(message.address, message.args);
 		}
