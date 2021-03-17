@@ -59,7 +59,14 @@ class instance extends instance_skel {
 			label:   'Command Set',
 			choices: [{id: "OSC", label: "OSC"}, {id: "IPAD", label: "IPAD"}, {id: "S", label: "S-Range"}],
 			default: 'IPAD'
-		}
+		},
+		{
+	    type: 'checkbox',
+	    label: 'Poll Macros On Companion Startup',
+    	id: 'polling',
+    	width: 5,
+    	default: true
+    },
 	]
 	}
 
@@ -248,6 +255,7 @@ class instance extends instance_skel {
 
 		this.init_osc();
 		this.init_feedbacks();
+		this.init_polling();
 
 
 		// this.init_variables()
@@ -273,6 +281,12 @@ class instance extends instance_skel {
 
 		// this.setVariableDefinitions(variables)
 
+	}
+
+	init_polling() {
+		if (this.config.polling == true) {
+			this.sendOSC("/Macros/Buttons/?")
+		};
 	}
 
 	init_feedbacks() {
