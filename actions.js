@@ -78,7 +78,7 @@ exports.getActions  = function() {
 		{ label: '-66 db', id: -66},
 		{ label: 'OFF', id: -150}
 	]
-	
+
 	if(this.config.series == "S") {
 
 		actions['snapshotS'] = {
@@ -96,7 +96,7 @@ exports.getActions  = function() {
 		}
 
 		actions['snapshotNextS'] = {	label: 'Fire next snapshot S-series'	}
-		
+
 		actions['snapshotPrevS'] = {	label: 'Fire previous snapshot S-series'	}
 	} else {
 
@@ -140,7 +140,7 @@ exports.getActions  = function() {
 			}]
 		}
         }
-	
+
 		actions['mute'] = {
 			label: 'Mute channel',
 			options: [
@@ -159,7 +159,7 @@ exports.getActions  = function() {
 				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
 			}]
 		}
-	
+
 		actions['phantom'] = {
 			label: 'Phantom channel',
 			options: [
@@ -178,7 +178,7 @@ exports.getActions  = function() {
 				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
 			}]
 		}
-	
+
 		actions['solo'] = {
 			label: 'Solo channel',
 			options: [
@@ -211,12 +211,12 @@ exports.getActions  = function() {
 				}
 			]
 		}
-		
+
 		actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
-		
+
 		actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
-		
-		
+
+
 		actions['macros'] = {
 			label: 'Macro',
 			options: [
@@ -226,7 +226,7 @@ exports.getActions  = function() {
 					id: 'macro',
 					default: 1,
 					min: 1,
-					max: 255
+					max: 256
 				}
 			]
 		}
