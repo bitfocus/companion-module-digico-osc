@@ -110,6 +110,30 @@ class instance extends instance_skel {
 					cmd = `/Input_Channels/${opt.channel}/solo`
 					break;
 
+					case 'auxmute':
+						arg = [ {
+							type: "i",
+							value: parseInt(opt.auxmute)
+						}]
+						cmd = `/Aux_Outputs/${opt.channel}/mute`;
+						break;
+
+						case 'cgmute':
+							arg = [ {
+								type: "f",
+								value: parseInt(opt.cgmute)
+							}]
+							cmd = `/Control_Groups/${opt.channel}/mute`;
+							break;
+
+							case 'gomute':
+								arg = [ {
+									type: "i",
+									value: parseInt(opt.gomute)
+								}]
+								cmd = `/Group_Outputs/${opt.channel}/mute`;
+								break;
+
 				case 'snapshot':
 					arg = [ {
 						type: "i",
@@ -175,6 +199,30 @@ class instance extends instance_skel {
 					}]
 					cmd = `/sd/Input_Channels/${opt.channel}/solo`
 					break;
+
+					case 'auxmute':
+						arg = [ {
+							type: "i",
+							value: parseInt(opt.auxmute)
+						}]
+						cmd = `/Aux_Outputs/${opt.channel}/mute`;
+						break;
+
+						case 'cgmute':
+							arg = [ {
+								type: "f",
+								value: parseInt(opt.cgmute)
+							}]
+							cmd = `/Control_Groups/${opt.channel}/mute`;
+							break;
+
+							case 'gomute':
+								arg = [ {
+									type: "i",
+									value: parseInt(opt.gomute)
+								}]
+								cmd = `/Group_Outputs/${opt.channel}/mute`;
+								break;
 
 				case 'snapshot':
 					arg = [ {
