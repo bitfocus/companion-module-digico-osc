@@ -4,6 +4,8 @@ var OSC           = require('osc');
 
 var debug;
 var log;
+let states = Array(257).fill(0);
+let macroname = Array(257).fill("N/A");
 
 class instance extends instance_skel {
 
@@ -58,7 +60,14 @@ class instance extends instance_skel {
 			label:   'Command Set',
 			choices: [{id: "OSC", label: "OSC"}, {id: "IPAD", label: "IPAD"}, {id: "S", label: "S-Range"}],
 			default: 'IPAD'
-		}
+		},
+		{
+	    type: 'checkbox',
+	    label: 'Poll Macros every 10 Seconds',
+    	id: 'polling',
+    	width: 5,
+    	default: true
+    },
 	]
 	}
 
@@ -66,7 +75,7 @@ class instance extends instance_skel {
 		let id = action.action;
 		let cmd, arg
 		let opt = action.options;
-		
+
 		if(this.config.series == "IPAD") {
 			switch (id){
 				case 'fader':
@@ -76,7 +85,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/Input_Channels/${opt.channel}/fader`;
 					break;
-	
+
 				case 'mute':
 					arg = [ {
 						type: "i",
@@ -84,7 +93,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/Input_Channels/${opt.channel}/mute`;
 					break;
-	
+
 				case 'phantom':
 					arg = [ {
 						type: "f",
@@ -92,7 +101,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/Input_Channels/${opt.channel}/Channel_Input/phantom`;
 					break;
-	
+
 				case 'solo':
 					arg = [ {
 						type: "f",
@@ -100,7 +109,31 @@ class instance extends instance_skel {
 					}]
 					cmd = `/Input_Channels/${opt.channel}/solo`
 					break;
-	
+
+					case 'auxmute':
+						arg = [ {
+							type: "i",
+							value: parseInt(opt.auxmute)
+						}]
+						cmd = `/Aux_Outputs/${opt.channel}/mute`;
+						break;
+
+						case 'cgmute':
+							arg = [ {
+								type: "f",
+								value: parseInt(opt.cgmute)
+							}]
+							cmd = `/Control_Groups/${opt.channel}/mute`;
+							break;
+
+							case 'gomute':
+								arg = [ {
+									type: "i",
+									value: parseInt(opt.gomute)
+								}]
+								cmd = `/Group_Outputs/${opt.channel}/mute`;
+								break;
+
 				case 'snapshot':
 					arg = [ {
 						type: "i",
@@ -108,7 +141,7 @@ class instance extends instance_skel {
 					}]
 					cmd = '/Snapshots/Fire_Snapshot_number'
 					break;
-	
+
 				case 'snapshotNext':
 					arg = [ {
 						type: "i",
@@ -142,7 +175,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/sd/Input_Channels/${opt.channel}/fader`;
 					break;
-	
+
 				case 'mute':
 					arg = [ {
 						type: "i",
@@ -150,7 +183,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/sd/Input_Channels/${opt.channel}/mute`;
 					break;
-	
+
 				case 'phantom':
 					arg = [ {
 						type: "i",
@@ -158,7 +191,7 @@ class instance extends instance_skel {
 					}]
 					cmd = `/sd/Input_Channels/${opt.channel}/Channel_Input/phantom`;
 					break;
-	
+
 				case 'solo':
 					arg = [ {
 						type: "i",
@@ -166,7 +199,31 @@ class instance extends instance_skel {
 					}]
 					cmd = `/sd/Input_Channels/${opt.channel}/solo`
 					break;
-	
+
+					case 'auxmute':
+						arg = [ {
+							type: "i",
+							value: parseInt(opt.auxmute)
+						}]
+						cmd = `/Aux_Outputs/${opt.channel}/mute`;
+						break;
+
+						case 'cgmute':
+							arg = [ {
+								type: "f",
+								value: parseInt(opt.cgmute)
+							}]
+							cmd = `/Control_Groups/${opt.channel}/mute`;
+							break;
+
+							case 'gomute':
+								arg = [ {
+									type: "i",
+									value: parseInt(opt.gomute)
+								}]
+								cmd = `/Group_Outputs/${opt.channel}/mute`;
+								break;
+
 				case 'snapshot':
 					arg = [ {
 						type: "i",
@@ -174,7 +231,7 @@ class instance extends instance_skel {
 					}]
 					cmd = '/sd/Snapshots/Fire_Snapshot_number'
 					break;
-	
+
 				case 'snapshotNext':
 					arg = [ {
 						type: "i",
@@ -198,7 +255,7 @@ class instance extends instance_skel {
 					}]
 					cmd = '/sd/Macros/Buttons/press'
 					break;
-			}	
+			}
 		} else if (this.config.series == "S") {
 			switch(id) {
 				case 'snapshotS':
@@ -215,7 +272,7 @@ class instance extends instance_skel {
 					}]
 					cmd = '/digico/snapshots/fire/next'
 					break;
-	
+
 				case 'snapshotPrevS':
 					arg = [ {
 						type: "i",
@@ -227,7 +284,7 @@ class instance extends instance_skel {
 		} else {
 			cmd = '';
 		}
-		
+
 		if (arg == null) {
 			arg = [];
 		}
@@ -246,6 +303,8 @@ class instance extends instance_skel {
 		log = this.log;
 
 		this.init_osc();
+		this.init_feedbacks();
+
 
 		// this.init_variables()
 
@@ -270,6 +329,70 @@ class instance extends instance_skel {
 
 		// this.setVariableDefinitions(variables)
 
+	}
+
+	init_polling() {
+		if (this.config.polling == true) {
+			this.sendOSC("/Macros/Buttons/?")
+		};
+	}
+
+	init_feedbacks() {
+		const feedbacks = {};
+		let self = this;
+
+
+		feedbacks.macroStatus = {
+			label: 'Change button color for macro state',
+			description: 'Change button color of the bank per macro state',
+			options: [
+				{
+					type: 'colorpicker',
+					label: 'Color',
+					id: 'fg',
+					default: self.rgb(255, 255, 255)
+				},
+				{
+					type: 'colorpicker',
+					label: 'Background',
+					id: 'bg',
+					default: self.rgb(0, 255, 0)
+				},
+				{
+					type: 'number',
+					label: 'Macro Number',
+					id: 'macro',
+					default: 1,
+					min: 1,
+					max: 256,
+				},
+				{
+					type: 'dropdown',
+					label: 'Macro State',
+					id: 'state',
+					default: 1,
+					choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
+				},
+				{
+					type: 'dropdown',
+					label: 'Use Console Macro Name',
+					id: 'name',
+					default: 0,
+					choices:  [{label: "on", id: "1"},{label: "off", id: "0"}]
+				}
+			],
+			callback: ({ options }, bank) => {
+				let channel = options.macro;
+				if (options.state == states[channel].status) {
+					if (options.name == 1){
+						return { color: options.fg, bgcolor: options.bg, text: macroname[channel].name}
+					} else if (options.name == 0) {
+						return { color: options.fg, bgcolor: options.bg}
+					}
+				}
+			}
+		}
+		self.setFeedbackDefinitions(feedbacks);
 	}
 
 	connect() {
@@ -320,26 +443,31 @@ class instance extends instance_skel {
 			});
 
 			this.qSocket.on("message", (message) => {
-				this.processMessage(message)
+				this.processMessage(message);
+			  this.checkFeedbacks();
 
 			});
 
 			this.qSocket.on("data", (data) => {
-				// console.log("Got: ",data, "from",this.qSocket.options.address);
 			});
+
+			setInterval(() => {
+				this.init_polling();
+			}, 10000);
 		}
 	}
 
 	processMessage(message) {
 		console.log("Got address: ", message.address);
 		console.log("Got args: ", message.args);
-		// { address: '/sd/Group_Outputs/10/mute',args: [ { type: 'i', value: 1 } ] }
-		// Got address:  /sd/Input_Channels/4/mute
-		// Got args:  [ { type: 'i', value: 1 } ]
-
-			if (message.address.match('mute')) {
-				//do stuff
-				// this.setVariable('currentColumn', message.args[0].value)
+		let address = message.address
+		let args    = message.args
+		if (address.match('/Macros/Buttons/state')) {
+			if (args.length >= 3) {
+		let chanNumber = args[0].value +1;
+		states[chanNumber] = { status : args[1].value};
+		macroname[chanNumber] = { name : args[2].value};
+	}
 		} else {
 			debug(message.address, message.args);
 		}
@@ -356,7 +484,7 @@ class instance extends instance_skel {
 		}
 		this.system.emit('osc_send',host, port, node, arg)
 	}
-
 }
+
 
 exports = module.exports = instance;

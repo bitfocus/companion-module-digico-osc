@@ -2,9 +2,21 @@ exports.getActions  = function() {
 
 	let actions = [];
 	actions.length = 0;
-	let CHOICES_CHANNELS =[]
+	let CHOICES_CHANNELS =[];
+	let CHOICES_CG =[];
+	let CHOICES_AUX =[];
+	let CHOICES_GO =[];
 	for (var i = 1; i < 145; i++) {
 		CHOICES_CHANNELS.push({ label: `ch ${i}`, id: i})
+	}
+	for (var i = 1; i < 25; i++) {
+		CHOICES_CG.push({ label: `CG ${i}`, id: i})
+	}
+	for (var i = 1; i < 13; i++) {
+		CHOICES_AUX.push({ label: `Aux ${i}`, id: i})
+	}
+	for (var i = 1; i < 13; i++) {
+		CHOICES_GO.push({ label: `Group Output ${i}`, id: i})
 	}
 	const CHOICES_FADER = [
 		{ label: '+10 db', id: 1},
@@ -78,7 +90,7 @@ exports.getActions  = function() {
 		{ label: '-66 db', id: -66},
 		{ label: 'OFF', id: -150}
 	]
-	
+
 	if(this.config.series == "S") {
 
 		actions['snapshotS'] = {
@@ -96,7 +108,7 @@ exports.getActions  = function() {
 		}
 
 		actions['snapshotNextS'] = {	label: 'Fire next snapshot S-series'	}
-		
+
 		actions['snapshotPrevS'] = {	label: 'Fire previous snapshot S-series'	}
 	} else {
 
@@ -140,7 +152,7 @@ exports.getActions  = function() {
 			}]
 		}
         }
-	
+
 		actions['mute'] = {
 			label: 'Mute channel',
 			options: [
@@ -159,7 +171,64 @@ exports.getActions  = function() {
 				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
 			}]
 		}
-	
+
+		actions['auxmute'] = {
+			label: 'Mute Aux',
+			options: [
+			{
+				label: 'Aux Number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_AUX
+			},
+			{
+				label: 'mute on/off',
+				type: 'dropdown',
+				id: 'auxmute',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
+
+		actions['cgmute'] = {
+			label: 'Mute Control Group',
+			options: [
+			{
+				label: 'Control Group Number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_CG
+			},
+			{
+				label: 'mute on/off',
+				type: 'dropdown',
+				id: 'cgmute',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
+
+		actions['gomute'] = {
+			label: 'Mute Group Output',
+			options: [
+			{
+				label: 'Group Output Number',
+				type: 'dropdown',
+				id: 'channel',
+				default: 1,
+				choices: CHOICES_GO
+			},
+			{
+				label: 'mute on/off',
+				type: 'dropdown',
+				id: 'gomute',
+				default: '1',
+				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
+			}]
+		}
+
 		actions['phantom'] = {
 			label: 'Phantom channel',
 			options: [
@@ -178,7 +247,7 @@ exports.getActions  = function() {
 				choices: [{label: "on", id: "1"},{label: "off", id: "0"}]
 			}]
 		}
-	
+
 		actions['solo'] = {
 			label: 'Solo channel',
 			options: [
@@ -211,12 +280,12 @@ exports.getActions  = function() {
 				}
 			]
 		}
-		
+
 		actions['snapshotNext'] = {	label: 'Fire next snapshot'	}
-		
+
 		actions['snapshotPrev'] = {	label: 'Fire previous snapshot'	}
-		
-		
+
+
 		actions['macros'] = {
 			label: 'Macro',
 			options: [
@@ -226,7 +295,7 @@ exports.getActions  = function() {
 					id: 'macro',
 					default: 1,
 					min: 1,
-					max: 255
+					max: 256
 				}
 			]
 		}
