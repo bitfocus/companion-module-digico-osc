@@ -1,13 +1,18 @@
 {
 	"name": "digico-osc",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"api_version": "1.0.0",
 	"keywords": [
 		"Audio",
 		"Sound"
-		],
+	],
 	"manufacturer": "DiGiCo",
-	"product": ["osc support","SD","Quantum", "S"],
+	"product": [
+		"osc support",
+		"SD",
+		"Quantum",
+		"S"
+	],
 	"shortname": "DiGiCo OSC",
 	"description": "DiGiCo plugin for Companion",
 	"main": "index.js",
