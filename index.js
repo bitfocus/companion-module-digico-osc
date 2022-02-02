@@ -482,7 +482,7 @@ class instance extends instance_skel {
 		if (this.config.port !== undefined && this.config.port !== ""){
 			port = this.config.port;
 		}
-		this.system.emit('osc_send',host, port, node, arg)
+		this.oscSend(host, port, node, arg)
 	}
 }
 
