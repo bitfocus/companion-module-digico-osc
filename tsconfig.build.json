@@ -5,6 +5,7 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"verbatimModuleSyntax": true
+		"verbatimModuleSyntax": true,
+		"resolveJsonModule": true
 	}
 }

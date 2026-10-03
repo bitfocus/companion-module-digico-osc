@@ -1,28 +1,31 @@
 {
 	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
 	"type": "connection",
-	"id": "digico-osc",
-	"name": "digico-osc",
+	"id": "digico",
+	"name": "digico",
 	"shortname": "digico",
 	"description": "Control of DiGiCo SD and Quantum Consoles via OSC",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/MeestorX/companion-module-digico-osc.git",
+	"bugs": "https://github.com/MeestorX/companion-module-digico-osc.git/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Andrew Broughton",
+			"email": "andy@checkcheckonetwo.com"
 		}
 	],
 	"runtime": {
 		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../dist/main.js"
+		"entrypoint": "../dist/main.js",
+		"permissions": {
+			"filesystem": true
+		}
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
-	"keywords": []
+	"manufacturer": "DiGiCo",
+	"products": ["SD", "Quantum"],
+	"keywords": ["DiGiCo", "SD", "Quantum", "Mixer", "OSC"]
 }
