@@ -4,44 +4,27 @@
 		"feedback": { "0": "Off", "1": "On" }
 	},
 	"auto_solo": {
-		"action": { "0": "OFF", "1": "Solo 1", "2": "Solo 2", "3": "Solo 1 + 2" },
-		"feedback": { "0": "OFF", "1": "Solo 1", "2": "Solo 2", "3": "Solo 1 + 2" }
+		"values": { "0": "OFF", "1": "Solo 1", "2": "Solo 2", "3": "Solo 1 + 2" }
 	},
 	"mode": {
-		"action": { "1": "Mono", "2": "Stereo" },
-		"feedback": { "1": "Mono", "2": "Stereo" },
-		"selectorPaths": {
-			"/Console/Input_Channels/modes": "/Input_Channels/*/Channel_Input/name",
-			"/Console/Aux_Outputs/modes": "/Aux_Outputs/*/Buss_Trim/name",
-			"/Console/Group_Outputs/modes": "/Group_Outputs/*/Buss_Trim/name"
-		}
+		"values": { "1": "Mono", "2": "Stereo" }
 	},
 	"comp_knee": {
-		"action": { "0": "Hard", "1": "Med", "2": "Soft" },
-		"feedback": { "0": "Hard", "1": "Med", "2": "Soft" }
+		"values": { "0": "Hard", "1": "Med", "2": "Soft" }
 	},
 	"comp-multiband-desser": {
-		"action": { "0": "Comp", "1": "Multiband", "2": "DeEsser" },
-		"feedback": { "0": "Comp", "1": "Multiband", "2": "DeEsser" }
-	},
-	"recall_scope": {
-		"action": { "0": "All", "1": "EQ", "2": "Dynamics" },
-		"feedback": { "0": "All", "1": "EQ", "2": "Dynamics" }
+		"values": { "0": "Comp", "1": "Multiband", "2": "DeEsser" }
 	},
 	"eq_curve_1": {
-		"action": { "1": "Bell", "4": "High Shelf" },
-		"feedback": { "1": "Bell", "4": "High Shelf" }
+		"values": { "1": "Bell", "4": "High Shelf" }
 	},
 	"eq_curve_2": {
-		"action": { "1": "Bell" },
-		"feedback": { "1": "Bell" }
+		"values": { "1": "Bell" }
 	},
 	"eq_curve_3": {
-		"action": { "1": "Bell" },
-		"feedback": { "1": "Bell" }
+		"values": { "1": "Bell" }
 	},
 	"eq_curve_4": {
-		"action": { "1": "Bell", "3": "Lo Shelf" },
-		"feedback": { "1": "Bell", "3": "Lo Shelf" }
+		"values": { "1": "Bell", "3": "Lo Shelf" }
 	}
 }

@@ -211,10 +211,7 @@ export class digico {
 			if (
 				responsePath === queryPath ||
 				responsePath.startsWith(`${queryPath}/`) ||
-				(queryPath === '/Console/Channels' && responsePath.startsWith('/Console/')) ||
-				(queryPath === '/Snapshots/names' && responsePath === '/Snapshots/name') ||
-				(queryPath === '/Macros/names' && responsePath === '/Macros/name') ||
-				(queryPath === '/Presets/names' && responsePath === '/Presets/name')
+				(queryPath === '/Console/Channels' && responsePath.startsWith('/Console/'))
 			) {
 				this.finishPendingQuery(queryPath, true)
 			}

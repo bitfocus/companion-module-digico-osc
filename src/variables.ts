@@ -13,9 +13,6 @@ export const PARAMETER_MAXIMUMS = {
 	aux_send: 'Aux Sends',
 	group_send: 'Group Sends',
 	matrix_send: 'Matrix Sends',
-	recall_macro: 'Macros',
-	presets: 'Presets',
-	snapshot: 'Snapshots',
 } as const
 
 export const MODULE_VARIABLES = {
