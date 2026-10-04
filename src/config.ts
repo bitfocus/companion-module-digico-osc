@@ -12,12 +12,12 @@ export type ModuleConfig = {
 
 export const DEFAULT_CONFIG: ModuleConfig = {
 	ip: '192.168.1.100',
-	transmitPort: 8000,
-	receivePort: 8001,
+	transmitPort: 7000,
+	receivePort: 7001,
 	ipadEnabled: false,
 	ipadIp: '192.168.1.101',
-	ipadTransmitPort: 8000,
-	ipadReceivePort: 7002,
+	ipadTransmitPort: 7002,
+	ipadReceivePort: 7003,
 }
 
 export function GetConfigFields(): SomeCompanionConfigField[] {
