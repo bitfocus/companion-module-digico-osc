@@ -1,0 +1,652 @@
+osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
+/Aux_Outputs/*/alternate_solo,Float,0,1,RW,Aux output alternate solo state - MAYBE?,,1
+/Aux_Outputs/*/auto_solo,Float,0,3,RW,"Aux output automatic solo routing selection: OFF, Solo 1, Solo 2, or both",,1
+/Aux_Outputs/*/Buss_Trim/name,String,,,RW,Aux output name,,1
+/Aux_Outputs/*/Buss_Trim/phase,BFloat,0,1,RW,Aux output signal polarity (phase) state,,1
+/Aux_Outputs/*/Buss_Trim/post_meter,Float,2,2,RW,Aux output post-fader signal meter reading,,1
+/Aux_Outputs/*/Buss_Trim/post_meter/right,Float,2,2,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Buss_Trim/pre_meter,Float,2,2,RW,Aux output pre-fader signal meter reading,,1
+/Aux_Outputs/*/Buss_Trim/pre_meter/right,Float,0,2,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Buss_Trim/trim,Float,-40,60,RW,Aux output digital input trim,dB,1
+/Aux_Outputs/*/Buss_Trim/tube_meter/left,Float,2,2,RW,Aux output left-channel meter reading,,1
+/Aux_Outputs/*/Buss_Trim/tube_meter/right,Float,2,2,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/CGs_level,Float,-150,10,RW,Aux output Control Group send level,dB,1
+/Aux_Outputs/*/CGs_mute,BFloat,0,1,RW,Aux output Control Group mute state,,1
+/Aux_Outputs/*/Channel_Delay/delay,Float,0,1300,RW,Aux output channel delay time,ms,1000
+/Aux_Outputs/*/Channel_Delay/delay_on,BFloat,0,1,RW,Aux output channel delay enable state,,1
+/Aux_Outputs/*/Channel_Delay/fine_delay,Float,-127,127,RW,Fine channel delay adjustment,samples,1
+/Aux_Outputs/*/Dynamics/comp_all_gain,Float,0,40,RW,Compressor overall makeup gain,dB,1
+/Aux_Outputs/*/Dynamics/comp_all_thresh,Float,-60,0,RW,Compressor overall threshold,dB,1
+/Aux_Outputs/*/Dynamics/comp_attack_1,Float,0.02,100,RW,Compressor band 1 attack time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_attack_2,Float,0.02,100,RW,Compressor band 2 attack time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_attack_3,Float,0.02,100,RW,Compressor band 3 attack time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_auto-gain_1,BFloat,0,1,RW,Compressor band 1 auto-gain state,,1
+/Aux_Outputs/*/Dynamics/comp_auto-gain_2,BFloat,0,1,RW,Compressor band 2 auto-gain state,,1
+/Aux_Outputs/*/Dynamics/comp_auto-gain_3,BFloat,0,1,RW,Compressor band 3 auto-gain state,,1
+/Aux_Outputs/*/Dynamics/comp_auto-gain_4,BFloat,0,1,RW,Compressor band 4 auto-gain state,,1
+/Aux_Outputs/*/Dynamics/comp_band_in_1,BFloat,0,1,RW,Compressor band 1 enable state,,1
+/Aux_Outputs/*/Dynamics/comp_band_in_2,BFloat,0,1,RW,Compressor band 2 enable state,,1
+/Aux_Outputs/*/Dynamics/comp_band_in_3,BFloat,0,1,RW,Compressor band 3 enable state,,1
+/Aux_Outputs/*/Dynamics/comp_gain_1,Float,0,40,RW,Compressor band 1 makeup gain,dB,1
+/Aux_Outputs/*/Dynamics/comp_gain_2,Float,0,40,RW,Compressor band 2 makeup gain,dB,1
+/Aux_Outputs/*/Dynamics/comp_gain_3,Float,0,40,RW,Compressor band 3 makeup gain,dB,1
+/Aux_Outputs/*/Dynamics/comp_gain_4,Float,0,40,RW,Compressor band 4 makeup gain,dB,1
+/Aux_Outputs/*/Dynamics/comp_HP_crossover,Float,20,20000,RW,Compressor high-pass crossover frequency,Hz,1
+/Aux_Outputs/*/Dynamics/comp_in,BFloat,0,1,RW,Compressor enable state,,1
+/Aux_Outputs/*/Dynamics/comp_knee_1,Float,0,2,RW,Compressor band 1 knee,,1
+/Aux_Outputs/*/Dynamics/comp_knee_2,Float,0,2,RW,Compressor band 2 knee,,1
+/Aux_Outputs/*/Dynamics/comp_knee_3,Float,0,2,RW,Compressor band 3 knee,,1
+/Aux_Outputs/*/Dynamics/comp_knee_4,Float,0,2,RW,Compressor band 4 knee,,1
+/Aux_Outputs/*/Dynamics/comp_listen_1,BFloat,0,1,RW,Compressor band 1 listen state,,1
+/Aux_Outputs/*/Dynamics/comp_listen_2,BFloat,0,1,RW,Compressor band 2 listen state,,1
+/Aux_Outputs/*/Dynamics/comp_listen_3,BFloat,0,1,RW,Compressor band 3 listen state,,1
+/Aux_Outputs/*/Dynamics/comp_LP_crossover,Float,20,20000,RW,Compressor low-pass crossover frequency,Hz,1
+/Aux_Outputs/*/Dynamics/comp_ratio_1,Float,1,50,RW,Compressor band 1 ratio,:1,1
+/Aux_Outputs/*/Dynamics/comp_ratio_2,Float,1,50,RW,Compressor band 2 ratio,:1,1
+/Aux_Outputs/*/Dynamics/comp_ratio_3,Float,1,50,RW,Compressor band 3 ratio,:1,1
+/Aux_Outputs/*/Dynamics/comp_ratio_4,Float,1,50,RW,Compressor band 4 ratio,:1,1
+/Aux_Outputs/*/Dynamics/comp_release_1,Float,1,10000,RW,Compressor band 1 release time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_release_2,Float,1,10000,RW,Compressor band 2 release time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_release_3,Float,1,10000,RW,Compressor band 3 release time,ms,1000
+/Aux_Outputs/*/Dynamics/comp_thresh_1,Float,-60,0,RW,Compressor band 1 threshold,dB,1
+/Aux_Outputs/*/Dynamics/comp_thresh_2,Float,-60,0,RW,Compressor band 2 threshold,dB,1
+/Aux_Outputs/*/Dynamics/comp_thresh_3,Float,-60,0,RW,Compressor band 3 threshold,dB,1
+/Aux_Outputs/*/Dynamics/comp-multiband-desser,Float,0,2,RW,Dynamics Mode,,1
+/Aux_Outputs/*/Dynamics/desser_centre_freq,Float,0,255,RW,De-esser centre frequency,,1
+/Aux_Outputs/*/Dynamics/desser_freq_width,Float,0,255,RW,De-esser frequency width,,1
+/Aux_Outputs/*/Dynamics/gate_attack,Float,0.05,100,RW,Gate attack time,ms,1000
+/Aux_Outputs/*/Dynamics/gate_centre_freq,Float,0,255,RW,Gate/ducker centre frequency,,1
+/Aux_Outputs/*/Dynamics/gate_freq_width,Float,0,255,RW,Gate/ducker frequency width,,1
+/Aux_Outputs/*/Dynamics/gate_hold,Float,2,2000,RW,Gate hold time,ms,1000
+/Aux_Outputs/*/Dynamics/gate_in,BFloat,0,1,RW,Gate enable state,,1
+/Aux_Outputs/*/Dynamics/gate_range,Float,0,90,RW,Gate range,dB,1
+/Aux_Outputs/*/Dynamics/gate_release,Float,5,10000,RW,Gate release time,ms,1000
+/Aux_Outputs/*/Dynamics/gate_thresh,Float,-60,0,RW,Gate threshold,dB,1
+/Aux_Outputs/*/Dynamics/GR_meter_1,Float,255,255,RW,Aux output dynamics band 1 gain-reduction meter reading,,1
+/Aux_Outputs/*/Dynamics/GR_meter_2,Float,255,255,RW,Aux output dynamics band 2 gain-reduction meter reading,,1
+/Aux_Outputs/*/Dynamics/GR_meter_3,Float,255,255,RW,Aux output dynamics band 3 gain-reduction meter reading,,1
+/Aux_Outputs/*/Dynamics/GR_meter_4,Float,255,255,RW,Aux output dynamics band 4 gain-reduction meter reading,,1
+/Aux_Outputs/*/Dynamics/input_meter/left,Float,0,0,RW,Aux output left-channel meter reading,,1
+/Aux_Outputs/*/Dynamics/input_meter/right,Float,0,0,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Dynamics/key_solo,BFloat,0,1,RW,Dynamics sidechain key solo/listen state,,1
+/Aux_Outputs/*/EQ/dynamic_eq_on_1,BFloat,0,1,RW,Dynamic EQ band 1 enable state,,1
+/Aux_Outputs/*/EQ/dynamic_eq_on_2,BFloat,0,1,RW,Dynamic EQ band 2 enable state,,1
+/Aux_Outputs/*/EQ/dynamic_eq_on_3,BFloat,0,1,RW,Dynamic EQ band 3 enable state,,1
+/Aux_Outputs/*/EQ/dynamic_eq_on_4,BFloat,0,1,RW,Dynamic EQ band 4 enable state,,1
+/Aux_Outputs/*/EQ/eq_attack_1,Float,0.5,100,RW,EQ band 1 dynamic EQ attack time,ms,1000
+/Aux_Outputs/*/EQ/eq_attack_2,Float,0.5,100,RW,EQ band 2 dynamic EQ attack time,ms,1000
+/Aux_Outputs/*/EQ/eq_attack_3,Float,0.5,100,RW,EQ band 3 dynamic EQ attack time,ms,1000
+/Aux_Outputs/*/EQ/eq_attack_4,Float,0.5,100,RW,EQ band 4 dynamic EQ attack time,ms,1000
+/Aux_Outputs/*/EQ/eq_curve_1,Float,1,4,RW,EQ band 1 filter curve selection,,1
+/Aux_Outputs/*/EQ/eq_curve_2,Float,1,4,,EQ band 2 filter curve selection,,1
+/Aux_Outputs/*/EQ/eq_curve_3,Float,1,4,,EQ band 3 filter curve selection,,1
+/Aux_Outputs/*/EQ/eq_curve_4,Float,1,4,RW,EQ band 4 filter curve selection,,1
+/Aux_Outputs/*/EQ/eq_freq_1,Float,20,20000,RW,EQ band 1 frequency,Hz,1
+/Aux_Outputs/*/EQ/eq_freq_2,Float,20,20000,RW,EQ band 2 frequency,Hz,1
+/Aux_Outputs/*/EQ/eq_freq_3,Float,20,20000,RW,EQ band 3 frequency,Hz,1
+/Aux_Outputs/*/EQ/eq_freq_4,Float,20,20000,RW,EQ band 4 frequency,Hz,1
+/Aux_Outputs/*/EQ/eq_gain_1,Float,-18,18,RW,EQ band 1 gain,dB,1
+/Aux_Outputs/*/EQ/eq_gain_2,Float,-18,18,RW,EQ band 2 gain,dB,1
+/Aux_Outputs/*/EQ/eq_gain_3,Float,-18,18,RW,EQ band 3 gain,dB,1
+/Aux_Outputs/*/EQ/eq_gain_4,Float,-18,18,RW,EQ band 4 gain,dB,1
+/Aux_Outputs/*/EQ/eq_in,BFloat,0,1,RW,Equalizer enable state,,1
+/Aux_Outputs/*/EQ/eq_on_1,BFloat,0,1,RW,EQ band 1 enable state,,1
+/Aux_Outputs/*/EQ/eq_on_2,BFloat,0,1,RW,EQ band 2 enable state,,1
+/Aux_Outputs/*/EQ/eq_on_3,BFloat,0,1,RW,EQ band 3 enable state,,1
+/Aux_Outputs/*/EQ/eq_on_4,BFloat,0,1,RW,EQ band 4 enable state,,1
+/Aux_Outputs/*/EQ/eq_over-under_1,BFloat,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
+/Aux_Outputs/*/EQ/eq_over-under_2,BFloat,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
+/Aux_Outputs/*/EQ/eq_over-under_3,BFloat,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
+/Aux_Outputs/*/EQ/eq_over-under_4,BFloat,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
+/Aux_Outputs/*/EQ/eq_Q_1,Float,0.1,20,RW,EQ band 1 Q / bandwidth,,1
+/Aux_Outputs/*/EQ/eq_Q_2,Float,0.1,20,RW,EQ band 2 Q / bandwidth,,1
+/Aux_Outputs/*/EQ/eq_Q_3,Float,0.1,20,RW,EQ band 3 Q / bandwidth,,1
+/Aux_Outputs/*/EQ/eq_Q_4,Float,0.1,20,RW,EQ band 4 Q / bandwidth,,1
+/Aux_Outputs/*/EQ/eq_ratio_1,Float,1,10,RW,EQ band 1 dynamic EQ ratio,:1,1
+/Aux_Outputs/*/EQ/eq_ratio_2,Float,1,10,RW,EQ band 2 dynamic EQ ratio,:1,1
+/Aux_Outputs/*/EQ/eq_ratio_3,Float,1,10,RW,EQ band 3 dynamic EQ ratio,:1,1
+/Aux_Outputs/*/EQ/eq_ratio_4,Float,1,10,RW,EQ band 4 dynamic EQ ratio,:1,1
+/Aux_Outputs/*/EQ/eq_release_1,Float,10,10000,RW,EQ band 1 dynamic EQ release time,ms,1000
+/Aux_Outputs/*/EQ/eq_release_2,Float,10,10000,RW,EQ band 2 dynamic EQ release time,ms,1000
+/Aux_Outputs/*/EQ/eq_release_3,Float,10,10000,RW,EQ band 3 dynamic EQ release time,ms,1000
+/Aux_Outputs/*/EQ/eq_release_4,Float,10,10000,RW,EQ band 4 dynamic EQ release time,ms,1000
+/Aux_Outputs/*/EQ/eq_symm_Q_1,BFloat,0,1,RW,EQ band 1 symmetric Q mode,,1
+/Aux_Outputs/*/EQ/eq_symm_Q_2,BFloat,0,1,RW,EQ band 2 symmetric Q mode,,1
+/Aux_Outputs/*/EQ/eq_symm_Q_3,BFloat,0,1,RW,EQ band 3 symmetric Q mode,,1
+/Aux_Outputs/*/EQ/eq_symm_Q_4,BFloat,0,1,RW,EQ band 4 symmetric Q mode,,1
+/Aux_Outputs/*/EQ/eq_thresh_1,Float,-60,0,RW,EQ band 1 dynamic EQ threshold,dB,1
+/Aux_Outputs/*/EQ/eq_thresh_2,Float,-60,0,RW,EQ band 2 dynamic EQ threshold,dB,1
+/Aux_Outputs/*/EQ/eq_thresh_3,Float,-60,0,RW,EQ band 3 dynamic EQ threshold,dB,1
+/Aux_Outputs/*/EQ/eq_thresh_4,Float,-60,0,RW,EQ band 4 dynamic EQ threshold,dB,1
+/Aux_Outputs/*/EQ/GR_meter_1,Float,255,255,RW,Aux output dynamics band 1 gain-reduction meter reading,,1
+/Aux_Outputs/*/EQ/GR_meter_2,Float,255,255,RW,Aux output dynamics band 2 gain-reduction meter reading,,1
+/Aux_Outputs/*/EQ/GR_meter_3,Float,255,255,RW,Aux output dynamics band 3 gain-reduction meter reading,,1
+/Aux_Outputs/*/EQ/GR_meter_4,Float,255,255,RW,Aux output dynamics band 4 gain-reduction meter reading,,1
+/Aux_Outputs/*/fader,Float,-150,10,RW,Aux output fader level.,dB,1
+/Aux_Outputs/*/fader_meter/left,Float,2,2,RW,Aux output left-channel meter reading,,1
+/Aux_Outputs/*/fader_meter/right,Float,2,2,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Filters/hi_filter_freq,Float,20,20000,RW,High-pass filter cutoff frequency,Hz,1
+/Aux_Outputs/*/Filters/hi_filter_in,BFloat,0,1,RW,High-pass filter enable state,,1
+/Aux_Outputs/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,Hz,1
+/Aux_Outputs/*/Filters/lo_filter_in,BFloat,0,1,RW,Low-pass filter enable state,,1
+/Aux_Outputs/*/hard_mute,BFloat,0,1,RW,Hard mute state,,1
+/Aux_Outputs/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
+/Aux_Outputs/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
+/Aux_Outputs/*/mute,BFloat,0,1,RW,Aux output mute state.,,1
+/Aux_Outputs/*/Output/dir_meter/left,Float,0,0,RW,Aux output left-channel meter reading,,1
+/Aux_Outputs/*/Output/dir_meter/right,Float,0,0,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Output/meter/centre,Float,0,0,RW,Aux output centre-channel meter reading,,1
+/Aux_Outputs/*/Output/meter/left,Float,0,0,RW,Aux output left-channel meter reading,,1
+/Aux_Outputs/*/Output/meter/LFE,Float,0,0,RW,Aux output LFE-channel meter reading,,1
+/Aux_Outputs/*/Output/meter/right,Float,0,0,RW,Aux output right-channel meter reading,,1
+/Aux_Outputs/*/Output/meter/SL,Float,0,0,RW,Aux output surround-left meter reading,,1
+/Aux_Outputs/*/Output/meter/SR,Float,0,0,RW,Aux output surround-right meter reading,,1
+/Aux_Outputs/*/Output/meter2,Float,0,0,RW,Aux output output meter 2 reading,,1
+/Aux_Outputs/*/Output/meter4,Float,0,0,RW,Aux output output meter 4 reading,,1
+/Aux_Outputs/*/sends_to_faders,BFloat,0,1,RW,Sends-to-faders mode state,,1
+/Aux_Outputs/*/sends_to_rotaries,BFloat,0,1,RW,Sends-to-rotaries mode state,,1
+/Aux_Outputs/*/solo,BFloat,0,1,RW,Aux output solo state,,1
+/Aux_Outputs/*/solo_1_or_2,Float,0,2,RW,"Aux output solo bus routing: Solo 1, Solo 2, or both",,1
+/Console/Aux_Outputs,Int,0,192,R,Reports the number of aux outputs configured on the console,,1
+/Console/Aux_Outputs/modes,Int,1,2,R,Mono/stereo format for the selected channels or outputs,,1
+/Console/Channels,,,,R,Reports counts for the console channel and output sections,,1
+/Console/Control_Groups,Int,0,36,R,Reports the number of Control Groups configured on the console,,1
+/Console/Graphic_EQ,Int,0,48,R,Reports the number of graphic EQs configured on the console,,1
+/Console/Group_Outputs,Int,1,192,R,Reports the number of group outputs configured on the console,,1
+/Console/Group_Outputs/modes,Int,1,6,R,Mono/stereo format for the selected channels or outputs,,1
+/Console/Input_Channels,Int,0,384,R,Reports the number of input channels configured on the console,,1
+/Console/Input_Channels/*/group_sends,Int,0,0,R,Group send states,,1
+/Console/Input_Channels/modes,Int,1,2,R,Mono/stereo format for the selected channels or outputs,,1
+/Console/Matrix_Inputs,Int,0,64,R,Reports the number of matrix inputs configured on the console,,1
+/Console/Matrix_Inputs/*/send_levels,Float,-150,0,RW,Send level values for selected items,,1
+/Console/Matrix_Inputs/*/send_ons,BInt,0,1,RW,Send enable states for selected items - MAYBE?,,1
+/Console/Matrix_Outputs,Int,0,64,R,Reports the number of matrix outputs configured on the console,,1
+/Console/Multis,Int,0,256,R,Reports the number of multis configured on the console.,,1
+/Console/Name,String,,,R,Console name.,,1
+/Console/Session/!,Int,0,0,W,Command trigger or query response - MAYBE?,,1
+/Console/Session/Filename,String,,,R,Name of the current session file.,,1
+/Console/Talkback_Outputs,Int,2,2,,Reports the number of talkback outputs configured on the console,,1
+/Control_Groups/*/aux_send,Float,-18,18,RW,Aux send level,dB,1
+/Control_Groups/*/fader,Float,-150,10,RW,Control Group fader level,dB,1
+/Control_Groups/*/mute,BFloat,0,1,RW,Control Group mute state,,1
+/Control_Groups/*/name,String,,,RW,Control Group name,,1
+/Control_Groups/*/solo,Float,0,1,RW,Control Group solo state,,1
+/Graphic_EQ/*/geq_gain_1,Float,-12,12,RW,Graphic EQ band 1 gain,dB,1
+/Graphic_EQ/*/geq_gain_2,Float,-12,12,RW,Graphic EQ band 2 gain,dB,1
+/Graphic_EQ/*/geq_gain_3,Float,-12,12,RW,Graphic EQ band 3 gain,dB,1
+/Graphic_EQ/*/geq_gain_4,Float,-12,12,RW,Graphic EQ band 4 gain,dB,1
+/Graphic_EQ/*/geq_gain_5,Float,-12,12,RW,Graphic EQ band 5 gain,dB,1
+/Graphic_EQ/*/geq_gain_6,Float,-12,12,RW,Graphic EQ band 6 gain,dB,1
+/Graphic_EQ/*/geq_gain_7,Float,-12,12,RW,Graphic EQ band 7 gain,dB,1
+/Graphic_EQ/*/geq_gain_8,Float,-12,12,RW,Graphic EQ band 8 gain,dB,1
+/Graphic_EQ/*/geq_gain_9,Float,-12,12,RW,Graphic EQ band 9 gain,dB,1
+/Graphic_EQ/*/geq_gain_10,Float,-12,12,RW,Graphic EQ band 10 gain,dB,1
+/Graphic_EQ/*/geq_gain_11,Float,-12,12,RW,Graphic EQ band 11 gain,dB,1
+/Graphic_EQ/*/geq_gain_12,Float,-12,12,RW,Graphic EQ band 12 gain,dB,1
+/Graphic_EQ/*/geq_gain_13,Float,-12,12,RW,Graphic EQ band 13 gain,dB,1
+/Graphic_EQ/*/geq_gain_14,Float,-12,12,RW,Graphic EQ band 14 gain,dB,1
+/Graphic_EQ/*/geq_gain_15,Float,-12,12,RW,Graphic EQ band 15 gain,dB,1
+/Graphic_EQ/*/geq_gain_16,Float,-12,12,RW,Graphic EQ band 16 gain,dB,1
+/Graphic_EQ/*/geq_gain_17,Float,-12,12,RW,Graphic EQ band 17 gain,dB,1
+/Graphic_EQ/*/geq_gain_18,Float,-12,12,RW,Graphic EQ band 18 gain,dB,1
+/Graphic_EQ/*/geq_gain_19,Float,-12,12,RW,Graphic EQ band 19 gain,dB,1
+/Graphic_EQ/*/geq_gain_20,Float,-12,12,RW,Graphic EQ band 20 gain,dB,1
+/Graphic_EQ/*/geq_gain_21,Float,-12,12,RW,Graphic EQ band 21 gain,dB,1
+/Graphic_EQ/*/geq_gain_22,Float,-12,12,RW,Graphic EQ band 22 gain,dB,1
+/Graphic_EQ/*/geq_gain_23,Float,-12,12,RW,Graphic EQ band 23 gain,dB,1
+/Graphic_EQ/*/geq_gain_24,Float,-12,12,RW,Graphic EQ band 24 gain,dB,1
+/Graphic_EQ/*/geq_gain_25,Float,-12,12,RW,Graphic EQ band 25 gain,dB,1
+/Graphic_EQ/*/geq_gain_26,Float,-12,12,RW,Graphic EQ band 26 gain,dB,1
+/Graphic_EQ/*/geq_gain_27,Float,-12,12,RW,Graphic EQ band 27 gain,dB,1
+/Graphic_EQ/*/geq_gain_28,Float,-12,12,RW,Graphic EQ band 28 gain,dB,1
+/Graphic_EQ/*/geq_gain_29,Float,-12,12,RW,Graphic EQ band 29 gain,dB,1
+/Graphic_EQ/*/geq_gain_30,Float,-12,12,RW,Graphic EQ band 30 gain,dB,1
+/Graphic_EQ/*/geq_gain_31,Float,-12,12,RW,Graphic EQ band 31 gain,dB,1
+/Graphic_EQ/*/geq_gain_32,Float,-12,12,RW,Graphic EQ band 32 gain,dB,1
+/Graphic_EQ/*/geq_in,BFloat,0,1,RW,Graphic EQ enable state,,1
+/Graphic_EQ/*/name,String,,,RW,Graphic EQ name.,,1
+/Group_Outputs/*/alternate_solo,Float,0,1,RW,Group output alternate solo state - MAYBE?,,1
+/Group_Outputs/*/auto_solo,Float,0,3,RW,"Group output automatic solo routing selection: OFF, Solo 1, Solo 2, or both",,1
+/Group_Outputs/*/Aux_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
+/Group_Outputs/*/Aux_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
+/Group_Outputs/*/Aux_Send/*/send_pan,Float,-1,1,RW,Send pan position,,1
+/Group_Outputs/*/Aux_Send/*/send_pre-post,Float,0,2,RW,Send pre-fader or post-fader tap point,,1
+/Group_Outputs/*/Buss_Trim/name,String,,,RW,Group output name.,,1
+/Group_Outputs/*/Buss_Trim/phase,BFloat,0,1,RW,Group output signal polarity (phase) state,,1
+/Group_Outputs/*/Buss_Trim/post_meter,Float,2,2,RW,Group output post-fader signal meter reading,,1
+/Group_Outputs/*/Buss_Trim/post_meter/right,Float,2,2,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Buss_Trim/pre_meter,Float,2,2,RW,Group output pre-fader signal meter reading,,1
+/Group_Outputs/*/Buss_Trim/pre_meter/right,Float,2,2,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Buss_Trim/trim,Float,-40,60,RW,Group output digital input trim,dB,1
+/Group_Outputs/*/Buss_Trim/tube_meter/left,Float,2,2,RW,Group output left-channel meter reading,,1
+/Group_Outputs/*/Buss_Trim/tube_meter/right,Float,2,2,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/CGs_level,Float,-150,10,RW,Group output Control Group send level - MAYBE?,dB,1
+/Group_Outputs/*/CGs_mute,BFloat,0,1,RW,Group output Control Group mute state,,1
+/Group_Outputs/*/Channel_Delay/delay,Float,0,1300,RW,Group output channel delay time,ms,1000
+/Group_Outputs/*/Channel_Delay/delay_on,BFloat,0,1,RW,Group output channel delay enable state,,1
+/Group_Outputs/*/Channel_Delay/fine_delay,Float,-127,127,RW,Fine channel delay adjustment,samples,1
+/Group_Outputs/*/Dynamics/comp_all_gain,Float,0,40,RW,Compressor overall makeup gain,dB,1
+/Group_Outputs/*/Dynamics/comp_all_thresh,Float,-60,0,RW,Compressor overall threshold,dB,1
+/Group_Outputs/*/Dynamics/comp_attack_1,Float,0.02,100,RW,Compressor band 1 attack time,ms,1000
+/Group_Outputs/*/Dynamics/comp_attack_2,Float,0.02,100,RW,Compressor band 2 attack time,ms,1000
+/Group_Outputs/*/Dynamics/comp_attack_3,Float,0.02,100,RW,Compressor band 3 attack time,ms,1000
+/Group_Outputs/*/Dynamics/comp_auto-gain_1,Float,0,1,RW,Compressor band 1 auto-gain state,,1
+/Group_Outputs/*/Dynamics/comp_auto-gain_2,Float,0,1,RW,Compressor band 2 auto-gain state,,1
+/Group_Outputs/*/Dynamics/comp_auto-gain_3,Float,0,1,RW,Compressor band 3 auto-gain state,,1
+/Group_Outputs/*/Dynamics/comp_auto-gain_4,Float,0,1,RW,Compressor band 4 auto-gain state,,1
+/Group_Outputs/*/Dynamics/comp_band_in_1,BFloat,0,1,RW,Compressor band 1 enable state,,1
+/Group_Outputs/*/Dynamics/comp_band_in_2,BFloat,0,1,RW,Compressor band 2 enable state,,1
+/Group_Outputs/*/Dynamics/comp_band_in_3,BFloat,0,1,RW,Compressor band 3 enable state,,1
+/Group_Outputs/*/Dynamics/comp_gain_1,Float,0,40,RW,Compressor band 1 makeup gain,dB,1
+/Group_Outputs/*/Dynamics/comp_gain_2,Float,0,40,RW,Compressor band 2 makeup gain,dB,1
+/Group_Outputs/*/Dynamics/comp_gain_3,Float,0,40,RW,Compressor band 3 makeup gain,dB,1
+/Group_Outputs/*/Dynamics/comp_gain_4,Float,0,40,RW,Compressor band 4 makeup gain,dB,1
+/Group_Outputs/*/Dynamics/comp_HP_crossover,Float,20,20000,RW,Compressor high-pass crossover frequency,Hz,1
+/Group_Outputs/*/Dynamics/comp_in,BFloat,0,1,RW,Compressor enable state,,1
+/Group_Outputs/*/Dynamics/comp_knee_1,Float,0,2,RW,Compressor band 1 knee,,1
+/Group_Outputs/*/Dynamics/comp_knee_2,Float,0,2,RW,Compressor band 2 knee,,1
+/Group_Outputs/*/Dynamics/comp_knee_3,Float,0,2,RW,Compressor band 3 knee,,1
+/Group_Outputs/*/Dynamics/comp_knee_4,Float,0,2,RW,Compressor band 4 knee,,1
+/Group_Outputs/*/Dynamics/comp_listen_1,Float,0,1,RW,Compressor band 1 listen state,,1
+/Group_Outputs/*/Dynamics/comp_listen_2,Float,0,1,RW,Compressor band 2 listen state,,1
+/Group_Outputs/*/Dynamics/comp_listen_3,Float,0,1,RW,Compressor band 3 listen state,,1
+/Group_Outputs/*/Dynamics/comp_LP_crossover,Float,20,20000,RW,Compressor low-pass crossover frequency,Hz,1
+/Group_Outputs/*/Dynamics/comp_ratio_1,Float,1,50,RW,Compressor band 1 ratio,:1,1
+/Group_Outputs/*/Dynamics/comp_ratio_2,Float,1,50,RW,Compressor band 2 ratio,:1,1
+/Group_Outputs/*/Dynamics/comp_ratio_3,Float,1,50,RW,Compressor band 3 ratio,:1,1
+/Group_Outputs/*/Dynamics/comp_ratio_4,Float,1,50,RW,Compressor band 4 ratio,:1,1
+/Group_Outputs/*/Dynamics/comp_release_1,Float,1,10000,RW,Compressor band 1 release time,ms,1000
+/Group_Outputs/*/Dynamics/comp_release_2,Float,1,10000,RW,Compressor band 2 release time,ms,1000
+/Group_Outputs/*/Dynamics/comp_release_3,Float,1,10000,RW,Compressor band 3 release time,ms,1000
+/Group_Outputs/*/Dynamics/comp_thresh_1,Float,-60,0,RW,Compressor band 1 threshold,dB,1
+/Group_Outputs/*/Dynamics/comp_thresh_2,Float,-60,0,RW,Compressor band 2 threshold,dB,1
+/Group_Outputs/*/Dynamics/comp_thresh_3,Float,-60,0,RW,Compressor band 3 threshold,dB,1
+/Group_Outputs/*/Dynamics/comp-multiband-desser,Float,0,2,RW,Dynamics Mode,,1
+/Group_Outputs/*/Dynamics/desser_centre_freq,Float,0,255,RW,De-esser centre frequency,,1
+/Group_Outputs/*/Dynamics/desser_freq_width,Float,0,255,RW,De-esser frequency width,,1
+/Group_Outputs/*/Dynamics/gate_attack,Float,0.05,100,RW,Gate attack time,ms,1000
+/Group_Outputs/*/Dynamics/gate_centre_freq,Float,0,255,RW,Gate/ducker centre frequency,,1
+/Group_Outputs/*/Dynamics/gate_freq_width,Float,0,255,RW,Gate/ducker frequency width,,1
+/Group_Outputs/*/Dynamics/gate_hold,Float,2,2000,RW,Gate hold time,ms,1000
+/Group_Outputs/*/Dynamics/gate_in,BFloat,0,1,RW,Gate enable state,,1
+/Group_Outputs/*/Dynamics/gate_range,Float,0,90,RW,Gate range,dB,1
+/Group_Outputs/*/Dynamics/gate_release,Float,5,10000,RW,Gate release time,ms,1000
+/Group_Outputs/*/Dynamics/gate_thresh,Float,-60,0,RW,Gate threshold,dB,1
+/Group_Outputs/*/Dynamics/GR_meter_1,Float,255,255,RW,Group output dynamics band 1 gain-reduction meter reading,,1
+/Group_Outputs/*/Dynamics/GR_meter_2,Float,255,255,RW,Group output dynamics band 2 gain-reduction meter reading,,1
+/Group_Outputs/*/Dynamics/GR_meter_3,Float,255,255,RW,Group output dynamics band 3 gain-reduction meter reading,,1
+/Group_Outputs/*/Dynamics/GR_meter_4,Float,255,255,RW,Group output dynamics band 4 gain-reduction meter reading,,1
+/Group_Outputs/*/Dynamics/input_meter/left,Float,0,0,RW,Group output left-channel meter reading,,1
+/Group_Outputs/*/Dynamics/input_meter/right,Float,0,0,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Dynamics/key_solo,Float,0,1,RW,Dynamics sidechain key solo/listen state,,1
+/Group_Outputs/*/EQ/dynamic_eq_on_1,BFloat,0,1,RW,Dynamic EQ band 1 enable state,,1
+/Group_Outputs/*/EQ/dynamic_eq_on_2,BFloat,0,1,RW,Dynamic EQ band 2 enable state,,1
+/Group_Outputs/*/EQ/dynamic_eq_on_3,BFloat,0,1,RW,Dynamic EQ band 3 enable state,,1
+/Group_Outputs/*/EQ/dynamic_eq_on_4,BFloat,0,1,RW,Dynamic EQ band 4 enable state,,1
+/Group_Outputs/*/EQ/eq_attack_1,Float,0.5,100,RW,EQ band 1 dynamic EQ attack time,ms,1000
+/Group_Outputs/*/EQ/eq_attack_2,Float,0.5,100,RW,EQ band 2 dynamic EQ attack time,ms,1000
+/Group_Outputs/*/EQ/eq_attack_3,Float,0.5,100,RW,EQ band 3 dynamic EQ attack time,ms,1000
+/Group_Outputs/*/EQ/eq_attack_4,Float,0.5,100,RW,EQ band 4 dynamic EQ attack time,ms,1000
+/Group_Outputs/*/EQ/eq_curve_1,Float,1,4,RW,EQ band 1 filter curve selection,,1
+/Group_Outputs/*/EQ/eq_curve_2,Float,1,4,RW,EQ band 2 filter curve selection,,1
+/Group_Outputs/*/EQ/eq_curve_3,Float,1,4,RW,EQ band 3 filter curve selection,,1
+/Group_Outputs/*/EQ/eq_curve_4,Float,1,4,RW,EQ band 4 filter curve selection,,1
+/Group_Outputs/*/EQ/eq_freq_1,Float,20,20000,RW,EQ band 1 frequency,Hz,1
+/Group_Outputs/*/EQ/eq_freq_2,Float,20,20000,RW,EQ band 2 frequency,Hz,1
+/Group_Outputs/*/EQ/eq_freq_3,Float,20,20000,RW,EQ band 3 frequency,Hz,1
+/Group_Outputs/*/EQ/eq_freq_4,Float,20,20000,RW,EQ band 4 frequency,Hz,1
+/Group_Outputs/*/EQ/eq_gain_1,Float,-18,18,RW,EQ band 1 gain,dB,1
+/Group_Outputs/*/EQ/eq_gain_2,Float,-18,18,RW,EQ band 2 gain,dB,1
+/Group_Outputs/*/EQ/eq_gain_3,Float,-18,18,RW,EQ band 3 gain,dB,1
+/Group_Outputs/*/EQ/eq_gain_4,Float,-18,18,RW,EQ band 4 gain,dB,1
+/Group_Outputs/*/EQ/eq_in,BFloat,0,1,RW,Equalizer enable state,,1
+/Group_Outputs/*/EQ/eq_on_1,BFloat,0,1,RW,EQ band 1 enable state,,1
+/Group_Outputs/*/EQ/eq_on_2,BFloat,0,1,RW,EQ band 2 enable state,,1
+/Group_Outputs/*/EQ/eq_on_3,BFloat,0,1,RW,EQ band 3 enable state,,1
+/Group_Outputs/*/EQ/eq_on_4,BFloat,0,1,RW,EQ band 4 enable state,,1
+/Group_Outputs/*/EQ/eq_over-under_1,Float,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
+/Group_Outputs/*/EQ/eq_over-under_2,Float,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
+/Group_Outputs/*/EQ/eq_over-under_3,Float,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
+/Group_Outputs/*/EQ/eq_over-under_4,Float,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
+/Group_Outputs/*/EQ/eq_Q_1,Float,0.1,20,RW,EQ band 1 Q / bandwidth,,1
+/Group_Outputs/*/EQ/eq_Q_2,Float,0.1,20,RW,EQ band 2 Q / bandwidth,,1
+/Group_Outputs/*/EQ/eq_Q_3,Float,0.1,20,RW,EQ band 3 Q / bandwidth,,1
+/Group_Outputs/*/EQ/eq_Q_4,Float,0.1,20,RW,EQ band 4 Q / bandwidth,,1
+/Group_Outputs/*/EQ/eq_ratio_1,Float,1,10,RW,EQ band 1 dynamic EQ ratio,:1,1
+/Group_Outputs/*/EQ/eq_ratio_2,Float,1,10,RW,EQ band 2 dynamic EQ ratio,:1,1
+/Group_Outputs/*/EQ/eq_ratio_3,Float,1,10,RW,EQ band 3 dynamic EQ ratio,:1,1
+/Group_Outputs/*/EQ/eq_ratio_4,Float,1,10,RW,EQ band 4 dynamic EQ ratio,:1,1
+/Group_Outputs/*/EQ/eq_release_1,Float,10,10000,RW,EQ band 1 dynamic EQ release time,ms,1000
+/Group_Outputs/*/EQ/eq_release_2,Float,10,10000,RW,EQ band 2 dynamic EQ release time,ms,1000
+/Group_Outputs/*/EQ/eq_release_3,Float,10,10000,RW,EQ band 3 dynamic EQ release time,ms,1000
+/Group_Outputs/*/EQ/eq_release_4,Float,10,10000,RW,EQ band 4 dynamic EQ release time,ms,1000
+/Group_Outputs/*/EQ/eq_symm_Q_1,BFloat,0,1,RW,EQ band 1 symmetric Q mode,,1
+/Group_Outputs/*/EQ/eq_symm_Q_2,BFloat,0,1,RW,EQ band 2 symmetric Q mode,,1
+/Group_Outputs/*/EQ/eq_symm_Q_3,BFloat,0,1,RW,EQ band 3 symmetric Q mode,,1
+/Group_Outputs/*/EQ/eq_symm_Q_4,BFloat,0,1,RW,EQ band 4 symmetric Q mode,,1
+/Group_Outputs/*/EQ/eq_thresh_1,Float,-60,0,RW,EQ band 1 dynamic EQ threshold,dB,1
+/Group_Outputs/*/EQ/eq_thresh_2,Float,-60,0,RW,EQ band 2 dynamic EQ threshold,dB,1
+/Group_Outputs/*/EQ/eq_thresh_3,Float,-60,0,RW,EQ band 3 dynamic EQ threshold,dB,1
+/Group_Outputs/*/EQ/eq_thresh_4,Float,-60,0,RW,EQ band 4 dynamic EQ threshold,dB,1
+/Group_Outputs/*/EQ/GR_meter_1,Float,255,255,RW,Group output dynamics band 1 gain-reduction meter reading,,1
+/Group_Outputs/*/EQ/GR_meter_2,Float,255,255,RW,Group output dynamics band 2 gain-reduction meter reading,,1
+/Group_Outputs/*/EQ/GR_meter_3,Float,255,255,RW,Group output dynamics band 3 gain-reduction meter reading,,1
+/Group_Outputs/*/EQ/GR_meter_4,Float,255,255,RW,Group output dynamics band 4 gain-reduction meter reading,,1
+/Group_Outputs/*/fader,Float,-150,10,RW,Group output fader level.,dB,1
+/Group_Outputs/*/fader_meter/left,Float,2,2,RW,Group output left-channel meter reading,,1
+/Group_Outputs/*/fader_meter/right,Float,2,2,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Filters/hi_filter_freq,Float,20,20000,RW,High-pass filter cutoff frequency,,1
+/Group_Outputs/*/Filters/hi_filter_in,BFloat,0,0,RW,High-pass filter enable state,,1
+/Group_Outputs/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,,1
+/Group_Outputs/*/Filters/lo_filter_in,BFloat,0,0,RW,Low-pass filter enable state,,1
+/Group_Outputs/*/group_sends,Int,0,0,RW,Group send states - MAYBE?,,1
+/Group_Outputs/*/Group_Send/*/group,Float,0,1,RW,Group send assignment state - MAYBE?,,1
+/Group_Outputs/*/hard_mute,BFloat,0,1,RW,Hard mute state,,1
+/Group_Outputs/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
+/Group_Outputs/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
+/Group_Outputs/*/mute,BFloat,0,1,RW,Group output mute state.,,1
+/Group_Outputs/*/Output/dir_meter/left,Float,0,0,RW,Group output left-channel meter reading,,1
+/Group_Outputs/*/Output/dir_meter/right,Float,0,0,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Output/meter/centre,Float,0,0,RW,Group output centre-channel meter reading,,1
+/Group_Outputs/*/Output/meter/left,Float,0,0,RW,Group output left-channel meter reading,,1
+/Group_Outputs/*/Output/meter/LFE,Float,0,0,RW,Group output LFE-channel meter reading,,1
+/Group_Outputs/*/Output/meter/right,Float,0,0,RW,Group output right-channel meter reading,,1
+/Group_Outputs/*/Output/meter/SL,Float,0,0,RW,Group output surround-left meter reading,,1
+/Group_Outputs/*/Output/meter/SR,Float,0,0,RW,Group output surround-right meter reading,,1
+/Group_Outputs/*/Output/meter2,Float,0,0,RW,Group output output meter 2 reading,,1
+/Group_Outputs/*/Output/meter4,Float,0,0,RW,Group output output meter 4 reading,,1
+/Group_Outputs/*/sends_to_faders,Float,0,1,RW,Sends-to-faders mode state,,1
+/Group_Outputs/*/sends_to_rotaries,Float,0,1,RW,Sends-to-rotaries mode state,,1
+/Group_Outputs/*/solo,Float,0,1,RW,Group output solo state.,,1
+/Group_Outputs/*/solo_1_or_2,Float,0,2,RW,"Group output solo bus routing: Solo 1, Solo 2, or both",,1
+/Input_Channels/*/Aux_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
+/Input_Channels/*/Aux_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
+/Input_Channels/*/Aux_Send/*/send_pan,Float,-1,1,RW,Send pan position,,1
+/Input_Channels/*/CGs_level,Float,-150,10,RW,Input channel Control Group send level - MAYBE?,dB,1
+/Input_Channels/*/CGs_mute,BFloat,0,1,RW,Input channel Control Group mute state,,1
+/Input_Channels/*/Channel_Delay/delay,Float,0,1300,RW,Input channel channel delay time,ms,1000
+/Input_Channels/*/Channel_Delay/delay_on,BFloat,0,1,RW,Input channel channel delay enable state,,1
+/Input_Channels/*/Channel_Delay/fine_delay,Float,-127,127,RW,Fine channel delay adjustment,samples,1
+/Input_Channels/*/Channel_Input/alt_analog_gain,Float,-20,60,RW,Alternate input analog preamp gain,dB,1
+/Input_Channels/*/Channel_Input/alt_input_pad,BFloat,0,1,RW,Alternate input pad state,,1
+/Input_Channels/*/Channel_Input/alt_phantom,BFloat,0,1,RW,Alternate input 48 V phantom power state,,1
+/Input_Channels/*/Channel_Input/analog_gain,Float,-20,60,RW,Analog preamp gain,dB,1
+/Input_Channels/*/Channel_Input/input_type,Float,0,2,RW,Input source type (mic/line) - MAYBE?,,1
+/Input_Channels/*/Channel_Input/input_pad,BFloat,0,1,RW,Input pad state,,1
+/Input_Channels/*/Channel_Input/main/alt_in,BFloat,0,1,RW,Main or alternate input selection,,1
+/Input_Channels/*/Channel_Input/name,String,,,RW,Input channel name.,,1
+/Input_Channels/*/Channel_Input/phantom,BFloat,0,1,RW,48 V phantom power state,,1
+/Input_Channels/*/Channel_Input/phase,BFloat,0,1,RW,Input channel signal polarity (phase) state,,1
+/Input_Channels/*/Channel_Input/stereo_mode,Float,1,2,RW,Input channel mono/stereo format,,1
+/Input_Channels/*/Channel_Input/trim,Float,-40,60,RW,Input channel digital input trim,dB,1
+/Input_Channels/*/Dynamics/comp_all_gain,Float,0,40,RW,Compressor overall makeup gain,dB,1
+/Input_Channels/*/Dynamics/comp_all_thresh,Float,-60,0,RW,Compressor overall threshold,dB,1
+/Input_Channels/*/Dynamics/comp_attack_1,Float,0.02,100,RW,Compressor band 1 attack time,ms,1000
+/Input_Channels/*/Dynamics/comp_attack_2,Float,0.02,100,RW,Compressor band 2 attack time,ms,1000
+/Input_Channels/*/Dynamics/comp_attack_3,Float,0.02,100,RW,Compressor band 3 attack time,ms,1000
+/Input_Channels/*/Dynamics/comp_auto-gain_1,Float,0,1,RW,Compressor band 1 auto-gain state,,1
+/Input_Channels/*/Dynamics/comp_auto-gain_2,Float,0,1,RW,Compressor band 2 auto-gain state,,1
+/Input_Channels/*/Dynamics/comp_auto-gain_3,Float,0,1,RW,Compressor band 3 auto-gain state,,1
+/Input_Channels/*/Dynamics/comp_auto-gain_4,Float,0,1,RW,Compressor band 4 auto-gain state,,1
+/Input_Channels/*/Dynamics/comp_band_in_1,BFloat,0,1,RW,Compressor band 1 enable state,,1
+/Input_Channels/*/Dynamics/comp_band_in_2,BFloat,0,1,RW,Compressor band 2 enable state,,1
+/Input_Channels/*/Dynamics/comp_band_in_3,BFloat,0,1,RW,Compressor band 3 enable state,,1
+/Input_Channels/*/Dynamics/comp_gain_1,Float,0,40,RW,Compressor band 1 makeup gain,dB,1
+/Input_Channels/*/Dynamics/comp_gain_2,Float,0,40,RW,Compressor band 2 makeup gain,dB,1
+/Input_Channels/*/Dynamics/comp_gain_3,Float,0,40,RW,Compressor band 3 makeup gain,dB,1
+/Input_Channels/*/Dynamics/comp_gain_4,Float,0,40,RW,Compressor band 4 makeup gain,dB,1
+/Input_Channels/*/Dynamics/comp_HP_crossover,Float,20,20000,RW,Compressor high-pass crossover frequency,Hz,1
+/Input_Channels/*/Dynamics/comp_in,BFloat,0,1,RW,Compressor enable state,,1
+/Input_Channels/*/Dynamics/comp_knee_1,Float,0,2,RW,Compressor band 1 knee,,1
+/Input_Channels/*/Dynamics/comp_knee_2,Float,0,2,RW,Compressor band 2 knee,,1
+/Input_Channels/*/Dynamics/comp_knee_3,Float,0,2,RW,Compressor band 3 knee,,1
+/Input_Channels/*/Dynamics/comp_knee_4,Float,0,2,RW,Compressor band 4 knee,,1
+/Input_Channels/*/Dynamics/comp_listen_1,Float,0,1,RW,Compressor band 1 listen state,,1
+/Input_Channels/*/Dynamics/comp_listen_2,Float,0,1,RW,Compressor band 2 listen state,,1
+/Input_Channels/*/Dynamics/comp_listen_3,Float,0,1,RW,Compressor band 3 listen state,,1
+/Input_Channels/*/Dynamics/comp_LP_crossover,Float,20,20000,RW,Compressor low-pass crossover frequency,Hz,1
+/Input_Channels/*/Dynamics/comp_ratio_1,Float,1,50,RW,Compressor band 1 ratio,:1,1
+/Input_Channels/*/Dynamics/comp_ratio_2,Float,1,50,RW,Compressor band 2 ratio,:1,1
+/Input_Channels/*/Dynamics/comp_ratio_3,Float,1,50,RW,Compressor band 3 ratio,:1,1
+/Input_Channels/*/Dynamics/comp_ratio_4,Float,1,50,RW,Compressor band 4 ratio,:1,1
+/Input_Channels/*/Dynamics/comp_release_1,Float,1,10000,RW,Compressor band 1 release time,ms,1000
+/Input_Channels/*/Dynamics/comp_release_2,Float,1,10000,RW,Compressor band 2 release time,ms,1000
+/Input_Channels/*/Dynamics/comp_release_3,Float,1,10000,RW,Compressor band 3 release time,ms,1000
+/Input_Channels/*/Dynamics/comp_thresh_1,Float,-60,0,RW,Compressor band 1 threshold,dB,1
+/Input_Channels/*/Dynamics/comp_thresh_2,Float,-60,0,RW,Compressor band 2 threshold,dB,1
+/Input_Channels/*/Dynamics/comp_thresh_3,Float,-60,0,RW,Compressor band 3 threshold,dB,1
+/Input_Channels/*/Dynamics/comp-multiband-desser,Float,0,2,RW,Dynamics Mode,,1
+/Input_Channels/*/Dynamics/desser_centre_freq,Float,0,255,RW,De-esser centre frequency,,1
+/Input_Channels/*/Dynamics/desser_freq_width,Float,0,255,RW,De-esser frequency width,,1
+/Input_Channels/*/Dynamics/gate_attack,Float,0.05,100,RW,Gate attack time,ms,1000
+/Input_Channels/*/Dynamics/gate_centre_freq,Float,0,255,RW,Gate/ducker centre frequency,,1
+/Input_Channels/*/Dynamics/gate_freq_width,Float,0,255,RW,Gate/ducker frequency width,,1
+/Input_Channels/*/Dynamics/gate_hold,Float,2,2000,RW,Gate hold time,ms,1000
+/Input_Channels/*/Dynamics/gate_in,BFloat,0,1,RW,Gate enable state,,1
+/Input_Channels/*/Dynamics/gate_range,Float,0,90,RW,Gate range,dB,1
+/Input_Channels/*/Dynamics/gate_release,Float,5,10000,RW,Gate release time,ms,1000
+/Input_Channels/*/Dynamics/gate_thresh,Float,-60,0,RW,Gate threshold,dB,1
+/Input_Channels/*/Dynamics/gate-duck-comp,Float,0,2,RW,Dynamics Mode - Maybe?,,1
+/Input_Channels/*/Dynamics/key_solo,Float,0,1,RW,Dynamics sidechain key solo/listen state,,1
+/Input_Channels/*/EQ/dynamic_eq_on_1,BFloat,0,1,RW,Dynamic EQ band 1 enable state,,1
+/Input_Channels/*/EQ/dynamic_eq_on_2,BFloat,0,1,RW,Dynamic EQ band 2 enable state,,1
+/Input_Channels/*/EQ/dynamic_eq_on_3,BFloat,0,1,RW,Dynamic EQ band 3 enable state,,1
+/Input_Channels/*/EQ/dynamic_eq_on_4,BFloat,0,1,RW,Dynamic EQ band 4 enable state,,1
+/Input_Channels/*/EQ/eq_attack_1,Float,0,100,RW,EQ band 1 dynamic EQ attack time,ms,1000
+/Input_Channels/*/EQ/eq_attack_2,Float,0,100,RW,EQ band 2 dynamic EQ attack time,ms,1000
+/Input_Channels/*/EQ/eq_attack_3,Float,0,100,RW,EQ band 3 dynamic EQ attack time,ms,1000
+/Input_Channels/*/EQ/eq_attack_4,Float,0,100,RW,EQ band 4 dynamic EQ attack time,ms,1000
+/Input_Channels/*/EQ/eq_curve_1,Float,1,4,RW,EQ band 1 filter curve selection,,1
+/Input_Channels/*/EQ/eq_curve_2,Float,1,4,RW,EQ band 2 filter curve selection,,1
+/Input_Channels/*/EQ/eq_curve_3,Float,1,4,RW,EQ band 3 filter curve selection,,1
+/Input_Channels/*/EQ/eq_curve_4,Float,1,4,RW,EQ band 4 filter curve selection,,1
+/Input_Channels/*/EQ/eq_freq_1,Float,20,20000,RW,EQ band 1 frequency,Hz,1
+/Input_Channels/*/EQ/eq_freq_2,Float,20,20000,RW,EQ band 2 frequency,Hz,1
+/Input_Channels/*/EQ/eq_freq_3,Float,20,20000,RW,EQ band 3 frequency,Hz,1
+/Input_Channels/*/EQ/eq_freq_4,Float,20,20000,RW,EQ band 4 frequency,Hz,1
+/Input_Channels/*/EQ/eq_gain_1,Float,-18,18,RW,EQ band 1 gain,dB,1
+/Input_Channels/*/EQ/eq_gain_2,Float,-18,18,RW,EQ band 2 gain,dB,1
+/Input_Channels/*/EQ/eq_gain_3,Float,-18,18,RW,EQ band 3 gain,dB,1
+/Input_Channels/*/EQ/eq_gain_4,Float,-18,18,RW,EQ band 4 gain,dB,1
+/Input_Channels/*/EQ/eq_in,BFloat,0,1,RW,Equalizer enable state,,1
+/Input_Channels/*/EQ/eq_on_1,BFloat,0,1,RW,EQ band 1 enable state,,1
+/Input_Channels/*/EQ/eq_on_2,BFloat,0,1,RW,EQ band 2 enable state,,1
+/Input_Channels/*/EQ/eq_on_3,BFloat,0,1,RW,EQ band 3 enable state,,1
+/Input_Channels/*/EQ/eq_on_4,BFloat,0,1,RW,EQ band 4 enable state,,1
+/Input_Channels/*/EQ/eq_over-under_1,Bfloat,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_2,Bfloat,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_3,Bfloat,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_4,Bfloat,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_Q_1,Float,0.1,20,RW,EQ band 1 Q / bandwidth,,1
+/Input_Channels/*/EQ/eq_Q_2,Float,0.1,20,RW,EQ band 2 Q / bandwidth,,1
+/Input_Channels/*/EQ/eq_Q_3,Float,0.1,20,RW,EQ band 3 Q / bandwidth,,1
+/Input_Channels/*/EQ/eq_Q_4,Float,0.1,20,RW,EQ band 4 Q / bandwidth,,1
+/Input_Channels/*/EQ/eq_ratio_1,Float,1,10,RW,EQ band 1 dynamic EQ ratio,:1,1
+/Input_Channels/*/EQ/eq_ratio_2,Float,1,10,RW,EQ band 2 dynamic EQ ratio,:1,1
+/Input_Channels/*/EQ/eq_ratio_3,Float,1,10,RW,EQ band 3 dynamic EQ ratio,:1,1
+/Input_Channels/*/EQ/eq_ratio_4,Float,1,10,RW,EQ band 4 dynamic EQ ratio,:1,1
+/Input_Channels/*/EQ/eq_release_1,Float,0,10000,RW,EQ band 1 dynamic EQ release time,ms,1000
+/Input_Channels/*/EQ/eq_release_2,Float,0,10000,RW,EQ band 2 dynamic EQ release time,ms,1000
+/Input_Channels/*/EQ/eq_release_3,Float,0,10000,RW,EQ band 3 dynamic EQ release time,ms,1000
+/Input_Channels/*/EQ/eq_release_4,Float,0,10000,RW,EQ band 4 dynamic EQ release time,ms,1000
+/Input_Channels/*/EQ/eq_symm_Q_1,BFloat,0,1,RW,EQ band 1 symmetric Q mode,,1
+/Input_Channels/*/EQ/eq_symm_Q_2,BFloat,0,1,RW,EQ band 2 symmetric Q mode,,1
+/Input_Channels/*/EQ/eq_symm_Q_3,BFloat,0,1,RW,EQ band 3 symmetric Q mode,,1
+/Input_Channels/*/EQ/eq_symm_Q_4,BFloat,0,1,RW,EQ band 4 symmetric Q mode,,1
+/Input_Channels/*/EQ/eq_thresh_1,Float,-60,0,RW,EQ band 1 dynamic EQ threshold,dB,1
+/Input_Channels/*/EQ/eq_thresh_2,Float,-60,0,RW,EQ band 2 dynamic EQ threshold,dB,1
+/Input_Channels/*/EQ/eq_thresh_3,Float,-60,0,RW,EQ band 3 dynamic EQ threshold,dB,1
+/Input_Channels/*/EQ/eq_thresh_4,Float,-60,0,RW,EQ band 4 dynamic EQ threshold,dB,1
+/Input_Channels/*/fader,Float,-150,10,RW,Input channel fader level.,dB,1
+/Input_Channels/*/Filters/hi_filter_freq,Float,20,20000,RW,High-pass filter cutoff frequency,,1
+/Input_Channels/*/Filters/hi_filter_in,BFloat,0,1,RW,High-pass filter enable state,,1
+/Input_Channels/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,,1
+/Input_Channels/*/Filters/lo_filter_in,BFloat,0,1,RW,Low-pass filter enable state,,1
+/Input_Channels/*/group_sends,Int,0,0,RW,Group send states - MAYBE?,,1
+/Input_Channels/*/Group_Send/*/group,Float,0,1,RW,Group send assignment state - MAYBE?,,1
+/Input_Channels/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
+/Input_Channels/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
+/Input_Channels/*/mute,BFloat,0,1,RW,Input channel mute state.,,1
+/Input_Channels/*/Panner/f-b,Float,0,1,RW,Front-to-back pan position,,1
+/Input_Channels/*/Panner/pan,Float,-1,1,RW,Input channel pan position,,1
+/Input_Channels/*/solo,BFloat,0,1,RW,Input channel solo state.,,1
+/Layout/Layout/Banks,String,,,RW,Fader bank selection,,1
+/Layout/Layout/Banks/!,Int,0,0,RW,Command trigger or query response - MAYBE?,,1
+/Matrix_Inputs/*/Channel_Input/name,String,,,RW,Matrix input name.,,1
+/Matrix_Inputs/*/Matrix_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
+/Matrix_Inputs/*/Matrix_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
+/Matrix_Inputs/*/send_levels,Float,-150,10,,Get all values for a selected Matrix - MAYBE?,dB,1
+/Matrix_Inputs/*/send_ons,BInt,0,1,,Get all values for a selected Matrix - MAYBE?,,1
+/Matrix_Outputs/*/alternate_solo,Bfloat,0,1,RW,Matrix output alternate solo state - MAYBE?,,1
+/Matrix_Outputs/*/Buss_Trim/name,String,,,RW,Matrix output name.,,1
+/Matrix_Outputs/*/Buss_Trim/phase,BFloat,0,1,RW,Matrix output signal polarity (phase) state,,1
+/Matrix_Outputs/*/Buss_Trim/post_meter,Float,2,2,RW,Matrix output post-fader signal meter reading,,1
+/Matrix_Outputs/*/Buss_Trim/post_meter/right,Float,2,2,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Buss_Trim/pre_meter,Float,2,2,RW,Matrix output pre-fader signal meter reading,,1
+/Matrix_Outputs/*/Buss_Trim/pre_meter/right,Float,2,2,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Buss_Trim/trim,Float,-40,60,RW,Matrix output digital input trim,dB,1
+/Matrix_Outputs/*/Buss_Trim/tube_meter/left,Float,2,2,RW,Matrix output left-channel meter reading,,1
+/Matrix_Outputs/*/Buss_Trim/tube_meter/right,Float,2,2,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/CGs_level,Float,-150,10,RW,Matrix output Control Group send level,dB,1
+/Matrix_Outputs/*/CGs_mute,BFloat,0,1,RW,Matrix output Control Group mute state,,1
+/Matrix_Outputs/*/Channel_Delay/delay,Float,0,1300,RW,Matrix output channel delay time,ms,1000
+/Matrix_Outputs/*/Channel_Delay/delay_on,BFloat,0,1,RW,Matrix output channel delay enable state,,1
+/Matrix_Outputs/*/Channel_Delay/fine_delay,Float,-127,127,RW,Fine channel delay adjustment,samples,1
+/Matrix_Outputs/*/Dynamics/comp_all_gain,Float,0,40,RW,Compressor overall makeup gain,dB,1
+/Matrix_Outputs/*/Dynamics/comp_all_thresh,Float,-60,0,RW,Compressor overall threshold,dB,1
+/Matrix_Outputs/*/Dynamics/comp_attack_1,Float,0.02,100,RW,Compressor band 1 attack time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_attack_2,Float,0.02,100,RW,Compressor band 2 attack time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_attack_3,Float,0.02,100,RW,Compressor band 3 attack time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_auto-gain_1,BFloat,0,1,RW,Compressor band 1 auto-gain state,,1
+/Matrix_Outputs/*/Dynamics/comp_auto-gain_2,BFloat,0,1,RW,Compressor band 2 auto-gain state,,1
+/Matrix_Outputs/*/Dynamics/comp_auto-gain_3,BFloat,0,1,RW,Compressor band 3 auto-gain state,,1
+/Matrix_Outputs/*/Dynamics/comp_auto-gain_4,BFloat,0,1,RW,Compressor band 4 auto-gain state,,1
+/Matrix_Outputs/*/Dynamics/comp_band_in_1,BFloat,0,1,RW,Compressor band 1 enable state,,1
+/Matrix_Outputs/*/Dynamics/comp_band_in_2,BFloat,0,1,RW,Compressor band 2 enable state,,1
+/Matrix_Outputs/*/Dynamics/comp_band_in_3,BFloat,0,1,RW,Compressor band 3 enable state,,1
+/Matrix_Outputs/*/Dynamics/comp_gain_1,Float,0,40,RW,Compressor band 1 makeup gain,dB,1
+/Matrix_Outputs/*/Dynamics/comp_gain_2,Float,0,40,RW,Compressor band 2 makeup gain,dB,1
+/Matrix_Outputs/*/Dynamics/comp_gain_3,Float,0,40,RW,Compressor band 3 makeup gain,dB,1
+/Matrix_Outputs/*/Dynamics/comp_gain_4,Float,0,40,RW,Compressor band 4 makeup gain,dB,1
+/Matrix_Outputs/*/Dynamics/comp_HP_crossover,Float,20,20000,RW,Compressor high-pass crossover frequency,Hz,1
+/Matrix_Outputs/*/Dynamics/comp_in,BFloat,0,1,RW,Compressor enable state,,1
+/Matrix_Outputs/*/Dynamics/comp_knee_1,Float,0,2,RW,Compressor band 1 knee,,1
+/Matrix_Outputs/*/Dynamics/comp_knee_2,Float,0,2,RW,Compressor band 2 knee,,1
+/Matrix_Outputs/*/Dynamics/comp_knee_3,Float,0,2,RW,Compressor band 3 knee,,1
+/Matrix_Outputs/*/Dynamics/comp_knee_4,Float,0,2,RW,Compressor band 4 knee,,1
+/Matrix_Outputs/*/Dynamics/comp_listen_1,BFloat,0,1,RW,Compressor band 1 listen state,,1
+/Matrix_Outputs/*/Dynamics/comp_listen_2,BFloat,0,1,RW,Compressor band 2 listen state,,1
+/Matrix_Outputs/*/Dynamics/comp_listen_3,BFloat,0,1,RW,Compressor band 3 listen state,,1
+/Matrix_Outputs/*/Dynamics/comp_LP_crossover,Float,20,20000,RW,Compressor low-pass crossover frequency,Hz,1
+/Matrix_Outputs/*/Dynamics/comp_ratio_1,Float,1,50,RW,Compressor band 1 ratio,:1,1
+/Matrix_Outputs/*/Dynamics/comp_ratio_2,Float,1,50,RW,Compressor band 2 ratio,:1,1
+/Matrix_Outputs/*/Dynamics/comp_ratio_3,Float,1,50,RW,Compressor band 3 ratio,:1,1
+/Matrix_Outputs/*/Dynamics/comp_ratio_4,Float,1,50,RW,Compressor band 4 ratio,:1,1
+/Matrix_Outputs/*/Dynamics/comp_release_1,Float,1,10000,RW,Compressor band 1 release time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_release_2,Float,1,10000,RW,Compressor band 2 release time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_release_3,Float,1,10000,RW,Compressor band 3 release time,ms,1000
+/Matrix_Outputs/*/Dynamics/comp_thresh_1,Float,-60,0,RW,Compressor band 1 threshold,dB,1
+/Matrix_Outputs/*/Dynamics/comp_thresh_2,Float,-60,0,RW,Compressor band 2 threshold,dB,1
+/Matrix_Outputs/*/Dynamics/comp_thresh_3,Float,-60,0,RW,Compressor band 3 threshold,dB,1
+/Matrix_Outputs/*/Dynamics/comp_multiband-desser,Float,0,2,RW,Dynamics Mode,,1
+/Matrix_Outputs/*/Dynamics/desser_centre_freq,Float,0,255,RW,De-esser centre frequency,,1
+/Matrix_Outputs/*/Dynamics/desser_freq_width,Float,0,255,RW,De-esser frequency width,,1
+/Matrix_Outputs/*/Dynamics/gate_attack,Float,0.05,100,RW,Gate attack time,ms,1000
+/Matrix_Outputs/*/Dynamics/gate_centre_freq,Float,0,255,RW,Gate/ducker centre frequency,,1
+/Matrix_Outputs/*/Dynamics/gate_freq_width,Float,0,255,RW,Gate/ducker frequency width,,1
+/Matrix_Outputs/*/Dynamics/gate_hold,Float,2,2000,RW,Gate hold time,ms,1000
+/Matrix_Outputs/*/Dynamics/gate_in,BFloat,0,1,RW,Gate enable state,,1
+/Matrix_Outputs/*/Dynamics/gate_range,Float,0,90,RW,Gate range,dB,1
+/Matrix_Outputs/*/Dynamics/gate_release,Float,5,10000,RW,Gate release time,ms,1000
+/Matrix_Outputs/*/Dynamics/gate_thresh,Float,-60,0,RW,Gate threshold,dB,1
+/Matrix_Outputs/*/Dynamics/GR_meter_1,Float,255,255,RW,Matrix output dynamics band 1 gain-reduction meter reading,,1
+/Matrix_Outputs/*/Dynamics/GR_meter_2,Float,255,255,RW,Matrix output dynamics band 2 gain-reduction meter reading,,1
+/Matrix_Outputs/*/Dynamics/GR_meter_3,Float,255,255,RW,Matrix output dynamics band 3 gain-reduction meter reading,,1
+/Matrix_Outputs/*/Dynamics/GR_meter_4,Float,255,255,RW,Matrix output dynamics band 4 gain-reduction meter reading,,1
+/Matrix_Outputs/*/Dynamics/input_meter/left,Float,0,0,RW,Matrix output left-channel meter reading,,1
+/Matrix_Outputs/*/Dynamics/input_meter/right,Float,0,0,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Dynamics/key_solo,BFloat,0,1,RW,Dynamics sidechain key solo/listen state,,1
+/Matrix_Outputs/*/EQ/dynamic_eq_on_1,BFloat,0,1,RW,Dynamic EQ band 1 enable state,,1
+/Matrix_Outputs/*/EQ/dynamic_eq_on_2,BFloat,0,1,RW,Dynamic EQ band 2 enable state,,1
+/Matrix_Outputs/*/EQ/dynamic_eq_on_3,BFloat,0,1,RW,Dynamic EQ band 3 enable state,,1
+/Matrix_Outputs/*/EQ/dynamic_eq_on_4,BFloat,0,1,RW,Dynamic EQ band 4 enable state,,1
+/Matrix_Outputs/*/EQ/eq_attack_1,Float,0.5,100,RW,EQ band 1 dynamic EQ attack time,ms,1000
+/Matrix_Outputs/*/EQ/eq_attack_2,Float,0.5,100,RW,EQ band 2 dynamic EQ attack time,ms,1000
+/Matrix_Outputs/*/EQ/eq_attack_3,Float,0.5,100,RW,EQ band 3 dynamic EQ attack time,ms,1000
+/Matrix_Outputs/*/EQ/eq_attack_4,Float,0.5,100,RW,EQ band 4 dynamic EQ attack time,ms,1000
+/Matrix_Outputs/*/EQ/eq_curve_1,Float,1,4,RW,EQ band 1 filter curve selection,,1
+/Matrix_Outputs/*/EQ/eq_curve_2,Float,1,4,RW,EQ band 2 filter curve selection,,1
+/Matrix_Outputs/*/EQ/eq_curve_3,Float,1,4,RW,EQ band 3 filter curve selection,,1
+/Matrix_Outputs/*/EQ/eq_curve_4,Float,1,4,RW,EQ band 4 filter curve selection,,1
+/Matrix_Outputs/*/EQ/eq_freq_1,Float,20,20000,RW,EQ band 1 frequency,Hz,1
+/Matrix_Outputs/*/EQ/eq_freq_2,Float,20,20000,RW,EQ band 2 frequency,Hz,1
+/Matrix_Outputs/*/EQ/eq_freq_3,Float,20,20000,RW,EQ band 3 frequency,Hz,1
+/Matrix_Outputs/*/EQ/eq_freq_4,Float,20,20000,RW,EQ band 4 frequency,Hz,1
+/Matrix_Outputs/*/EQ/eq_gain_1,Float,-18,18,RW,EQ band 1 gain,dB,1
+/Matrix_Outputs/*/EQ/eq_gain_2,Float,-18,18,RW,EQ band 2 gain,dB,1
+/Matrix_Outputs/*/EQ/eq_gain_3,Float,-18,18,RW,EQ band 3 gain,dB,1
+/Matrix_Outputs/*/EQ/eq_gain_4,Float,-18,18,RW,EQ band 4 gain,dB,1
+/Matrix_Outputs/*/EQ/eq_in,BFloat,0,1,RW,Equalizer enable state,,1
+/Matrix_Outputs/*/EQ/eq_on_1,BFloat,0,1,RW,EQ band 1 enable state,,1
+/Matrix_Outputs/*/EQ/eq_on_2,BFloat,0,1,RW,EQ band 2 enable state,,1
+/Matrix_Outputs/*/EQ/eq_on_3,BFloat,0,1,RW,EQ band 3 enable state,,1
+/Matrix_Outputs/*/EQ/eq_on_4,BFloat,0,1,RW,EQ band 4 enable state,,1
+/Matrix_Outputs/*/EQ/eq_over-under_1,BFloat,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
+/Matrix_Outputs/*/EQ/eq_over-under_2,BFloat,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
+/Matrix_Outputs/*/EQ/eq_over-under_3,BFloat,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
+/Matrix_Outputs/*/EQ/eq_over-under_4,BFloat,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
+/Matrix_Outputs/*/EQ/eq_Q_1,Float,0.1,20,RW,EQ band 1 Q / bandwidth,,1
+/Matrix_Outputs/*/EQ/eq_Q_2,Float,0.1,20,RW,EQ band 2 Q / bandwidth,,1
+/Matrix_Outputs/*/EQ/eq_Q_3,Float,0.1,20,RW,EQ band 3 Q / bandwidth,,1
+/Matrix_Outputs/*/EQ/eq_Q_4,Float,0.1,20,RW,EQ band 4 Q / bandwidth,,1
+/Matrix_Outputs/*/EQ/eq_ratio_1,Float,1,10,RW,EQ band 1 dynamic EQ ratio,:1,1
+/Matrix_Outputs/*/EQ/eq_ratio_2,Float,1,10,RW,EQ band 2 dynamic EQ ratio,:1,1
+/Matrix_Outputs/*/EQ/eq_ratio_3,Float,1,10,RW,EQ band 3 dynamic EQ ratio,:1,1
+/Matrix_Outputs/*/EQ/eq_ratio_4,Float,1,10,RW,EQ band 4 dynamic EQ ratio,:1,1
+/Matrix_Outputs/*/EQ/eq_release_1,Float,10,10000,RW,EQ band 1 dynamic EQ release time,ms,1000
+/Matrix_Outputs/*/EQ/eq_release_2,Float,10,10000,RW,EQ band 2 dynamic EQ release time,ms,1000
+/Matrix_Outputs/*/EQ/eq_release_3,Float,10,10000,RW,EQ band 3 dynamic EQ release time,ms,1000
+/Matrix_Outputs/*/EQ/eq_release_4,Float,10,10000,RW,EQ band 4 dynamic EQ release time,ms,1000
+/Matrix_Outputs/*/EQ/eq_symm_Q_1,BFloat,0,1,RW,EQ band 1 symmetric Q mode,,1
+/Matrix_Outputs/*/EQ/eq_symm_Q_2,BFloat,0,1,RW,EQ band 2 symmetric Q mode,,1
+/Matrix_Outputs/*/EQ/eq_symm_Q_3,BFloat,0,1,RW,EQ band 3 symmetric Q mode,,1
+/Matrix_Outputs/*/EQ/eq_symm_Q_4,BFloat,0,1,RW,EQ band 4 symmetric Q mode,,1
+/Matrix_Outputs/*/EQ/eq_thresh_1,Float,-60,0,RW,EQ band 1 dynamic EQ threshold,dB,1
+/Matrix_Outputs/*/EQ/eq_thresh_2,Float,-60,0,RW,EQ band 2 dynamic EQ threshold,dB,1
+/Matrix_Outputs/*/EQ/eq_thresh_3,Float,-60,0,RW,EQ band 3 dynamic EQ threshold,dB,1
+/Matrix_Outputs/*/EQ/eq_thresh_4,Float,-60,0,RW,EQ band 4 dynamic EQ threshold,dB,1
+/Matrix_Outputs/*/EQ/GR_meter_1,Float,255,255,RW,Matrix output dynamics band 1 gain-reduction meter reading,,1
+/Matrix_Outputs/*/EQ/GR_meter_2,Float,255,255,RW,Matrix output dynamics band 2 gain-reduction meter reading,,1
+/Matrix_Outputs/*/EQ/GR_meter_3,Float,255,255,RW,Matrix output dynamics band 3 gain-reduction meter reading,,1
+/Matrix_Outputs/*/EQ/GR_meter_4,Float,255,255,RW,Matrix output dynamics band 4 gain-reduction meter reading,,1
+/Matrix_Outputs/*/fader,Float,-150,10,RW,Matrix output fader level,dB,1
+/Matrix_Outputs/*/fader_meter/left,Float,2,2,RW,Matrix output left-channel meter reading,,1
+/Matrix_Outputs/*/fader_meter/right,Float,2,2,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Filters/hi_filter_freq,Float,20,20000,RW,High-pass filter cutoff frequency,,1
+/Matrix_Outputs/*/Filters/hi_filter_in,BFloat,0,1,RW,High-pass filter enable state,,1
+/Matrix_Outputs/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,,1
+/Matrix_Outputs/*/Filters/lo_filter_in,BFloat,0,1,RW,Low-pass filter enable state,,1
+/Matrix_Outputs/*/hard_mute,BFloat,0,1,RW,Hard mute state,,1
+/Matrix_Outputs/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
+/Matrix_Outputs/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
+/Matrix_Outputs/*/mute,BFloat,0,1,RW,Matrix output mute state.,,1
+/Matrix_Outputs/*/Output/dir_meter/left,Float,0,0,RW,Matrix output left-channel meter reading,,1
+/Matrix_Outputs/*/Output/dir_meter/right,Float,0,0,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Output/meter/centre,Float,0,0,RW,Matrix output centre-channel meter reading,,1
+/Matrix_Outputs/*/Output/meter/left,Float,0,0,RW,Matrix output left-channel meter reading,,1
+/Matrix_Outputs/*/Output/meter/LFE,Float,0,0,RW,Matrix output LFE-channel meter reading,,1
+/Matrix_Outputs/*/Output/meter/right,Float,0,0,RW,Matrix output right-channel meter reading,,1
+/Matrix_Outputs/*/Output/meter/SL,Float,0,0,RW,Matrix output surround-left meter reading,,1
+/Matrix_Outputs/*/Output/meter/SR,Float,0,0,RW,Matrix output surround-right meter reading,,1
+/Matrix_Outputs/*/Output/meter2,Float,0,0,RW,Matrix output output meter 2 reading,,1
+/Matrix_Outputs/*/Output/meter4,Float,0,0,RW,Matrix output output meter 4 reading,,1
+/Matrix_Outputs/*/solo,BFloat,0,1,RW,Matrix output solo state,,1
+/Matrix_Outputs/*/solo_1_or_2,Float,0,2,RW,"Matrix output solo bus routing: Solo 1, Solo 2, or both",,1
+/Meters/clear,,,,W,Clear meters,,1
+/Meters/request/*,String,,,W,Request meter data for the selected item,,1
+/Meters/values,Int,0,10,RW,Meter values response,,1
+/Multis/*/fader,Float,-150,10,RW,Multi channel fader level.,dB,1
+/Multis/*/mute,BFloat,0,1,RW,Multi channel mute state.,,1
+/Multis/*/name,String,,,RW,Multi channel name.,,1
+/Multis/*/solo,BFloat,0,1,RW,Multi channel solo state.,,1
+/TalkBack_Input/Channel_Input/analog_gain,,,,,Analog preamp gain,,1

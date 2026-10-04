@@ -1,1 +1,21 @@
-api/
+node_modules/
+package-lock.json
+/pkg
+/*.tgz
+/dist
+DEBUG-*
+/.yarn
+/.vscode
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+docs

@@ -1,0 +1,33 @@
+{
+	"boolean": {
+		"action": { "0": "Off", "1": "On", "2": "Toggle" },
+		"feedback": { "0": "Off", "1": "On" }
+	},
+	"auto_solo": {
+		"values": { "0": "OFF", "1": "Solo 1", "2": "Solo 2", "3": "Solo 1 + 2" }
+	},
+	"mode": {
+		"values": { "1": "Mono", "2": "Stereo" }
+	},
+	"comp_knee": {
+		"values": { "0": "Hard", "1": "Med", "2": "Soft" }
+	},
+	"comp-multiband-desser": {
+		"values": { "0": "Comp", "1": "Multiband", "2": "DeEsser" }
+	},
+	"recall_scope": {
+		"values": { "0": "All", "1": "EQ", "2": "Dynamics" }
+	},
+	"eq_curve_1": {
+		"values": { "1": "Bell", "4": "High Shelf" }
+	},
+	"eq_curve_2": {
+		"values": { "1": "Bell" }
+	},
+	"eq_curve_3": {
+		"values": { "1": "Bell" }
+	},
+	"eq_curve_4": {
+		"values": { "1": "Bell", "3": "Lo Shelf" }
+	}
+}
