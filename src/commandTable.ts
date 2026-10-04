@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -60,7 +60,9 @@ export function commandNameFromPath(path: string): string {
 }
 
 function csvPath(name: string): string {
-	return resolve(dirname(fileURLToPath(import.meta.url)), `../${name}`)
+	const moduleDir = dirname(fileURLToPath(import.meta.url))
+	const paths = [resolve(moduleDir, name), resolve(moduleDir, `../${name}`)]
+	return paths.find((path) => existsSync(path)) ?? paths[0]!
 }
 
 export function loadCommandTable(): CommandRow[] {
