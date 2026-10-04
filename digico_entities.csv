@@ -1,0 +1,43 @@
+osc_path,data_type,osc_min,osc_max,rw,description,units,Scale,action_schema,feedback_schema,refresh_entity,value_selector_label,learn_schema
+/Macros/Buttons,,,,RW,Macro button control endpoint - MAYBE?,,1,,,
+/Macros/Buttons/state/*,Int,0,2,RW,Macro button state and name,,1,,indexedRecord,
+/Macros/Buttons/count,Int,0,0,RW,Number of macro buttons.,,1,,,
+/Macros/Buttons/press,Int,0,255,W,Press this macro button,,1,,,
+/Macros/count,Int,0,9999,R,Number of Macros,,1,,,
+/Macros/name,Int,0,9999,R,Macro info by index,,1,,entityRecord,
+/Macros/names,,,,R,Names list,,1,,,
+/Macros/Recall_Macro/*,,,,W,Recall or trigger this macro,,1,,,
+/Presets/count,Int,0,9999,R,Number of presets,,1,,,
+/Presets/name,Int,0,9999,R,Preset info by index,,1,,entityRecord,
+/Presets/names,,,,R,Names list,,1,,,
+/Presets/Delete_Preset/*,,,,W,Delete this preset,,1,,,Presets
+/Presets/Lock_Preset/*,BInt,0,1,RW,Preset lock state,,1,,,Presets
+/Presets/New_Preset,String,,,W,Creates a preset,,1,presetCreate,,Presets
+/Presets/Recall_Preset/*,String,,,W,Recall this preset,,1,presetRecall,,
+/Presets/Recall_Scope,Int,0,2,,Preset recall scope,,1,,,
+/Presets/Rename_Preset/*,String,,,W,Rename this preset,,1,,,Presets,,name
+/Presets/Rename_Preset_Group/*,String,,,W,Rename this preset group,,1,presetGroup,,Presets,,group
+/Presets/Update_Preset/*,String,,,W,Update this preset with the chosen value,,1,presetUpdate,,
+/Snapshots/Change_Surface_Snapshot/*,,,,W,Selects a snapshot on the console surface,,1,,,
+/Snapshots/Current_Snapshot,Int,-1,9999,R,Index of the currently selected snapshot,,1,,,
+/Snapshots/Delete_Snapshot/*,,,,W,Delete this snapshot,,1,,,Snapshots
+/Snapshots/End_Recall_Snapshot,,,,R,End the current snapshot recall,,1,,,
+/Snapshots/Fire_Next_Snapshot,,,,W,Fires the next snapshot,,1,,,
+/Snapshots/Fire_Prev_Snapshot,,,,W,Fires the previous snapshot,,1,,,
+/Snapshots/Fire_Selected_Snapshot,,,,W,Fires the snapshot selected on the surface,,1,,,
+/Snapshots/Fire_Snapshot_sends_MIDI,BInt,0,1,W,Snapshot MIDI-send enable state,,1,,,
+/Snapshots/Insert_New_Snapshot,,,,W,Insert a new snapshot AFTER the currently selected Snapshot,,1,,,Snapshots
+/Snapshots/Insert_New_Snapshot/Update_Waves_Only,BInt,0,1,,Whether snapshot insertion updates Waves processing only,,1,,,
+/Snapshots/MIDI_fires_Snapshots,BInt,0,1,W,Enable snapshot recall from MIDI,,1,,,
+/Snapshots/Move_Snapshot/*,Int,0,9999,W,Moves a snapshot to a different position,,1,,,Snapshots,To Snapshot
+/Snapshots/name,Int,0,9999,R,Snapshot info by index,,1,,entityRecord,
+/Snapshots/New_Snapshot/*,,,,W,Add a new snapshot before this Snapshot,,1,,,Snapshots
+/Snapshots/notes,Int,0,9999,R,Snapshot notes text,,1,,snapshotNote,
+/Snapshots/Recall_Snapshot/*,,,,W,Recall this snapshot,,1,,,
+/Snapshots/Rename_Snapshot/*,String,,,W,Rename this snapshot,,1,,,Snapshots,,name
+/Snapshots/Renumber_Snapshot/*,Int,0,327.67,W,Change this snapshot's number,,0.01,,,Snapshots
+/Snapshots/count,Int,0,9999,R,Number of snapshots,,1,,,
+/Snapshots/Undo_Snapshot,,,,W,Undoes the last snapshot recall,,1,,,
+/Snapshots/Update_Current_Snapshot,,,,W,Update the current snapshot,,1,,,Snapshots
+/Snapshots/Update_Snapshot/*,,,,W,Update (overwrite) this Snapshot,,1,,,Snapshots
+/Snapshots/Update_Snapshot_Group,Int,0,9999,RW,Update snapshot group,,1,,,Snapshots

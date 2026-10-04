@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"print.sourcecode.colourScheme": "Visual Studio"
+	}
+}
