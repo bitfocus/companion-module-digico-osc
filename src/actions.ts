@@ -10,6 +10,7 @@ import type ModuleInstance from './main.js'
 import type { CommandRow } from './commandTable.js'
 import {
 	getPathAxisLabel,
+	getPathAxisSegment,
 	getPathParameterCount,
 	isBooleanDataType,
 	isNoArgs,
@@ -19,6 +20,7 @@ import {
 	oscDataType,
 } from './commandTable.js'
 import { getMappedChoices, getValueSelectorPath } from './valueMappings.js'
+import { hasEntityRoot } from './entityRecords.js'
 
 const logger = createModuleLogger('action')
 
@@ -44,8 +46,9 @@ function selectedPaths(
 	path: string,
 	options: CompanionOptionValues,
 	selectors: Array<Array<{ id: number | string }>>,
+	fallback = 1,
 ): string[] {
-	const indexes = selectors.map((choices, axis) => optionIndexes(options[`index_${axis + 1}`], choices))
+	const indexes = selectors.map((choices, axis) => optionIndexes(options[`index_${axis + 1}`], choices, fallback))
 	return combinations(indexes).map((values) => materializePath(path, values))
 }
 
@@ -84,10 +87,23 @@ function actionOptions(
 	row: CommandRow,
 	path: string,
 	selectorDefinitions: Array<{ path: string; axis: number }>,
+	selectorChoices?: Array<Array<{ id: number | string; label: string }>>,
 ): SomeCompanionActionInputField[] {
 	const options: SomeCompanionActionInputField[] = []
 	selectorDefinitions.forEach(({ path: selectorPath, axis }) => {
-		const choices = self.getParameterChoices(selectorPath, axis)
+		const choices = selectorChoices?.[axis] ?? self.getParameterChoices(selectorPath, axis)
+		const root = row.oscPath.split('/').filter(Boolean)[0]
+		if (root && hasEntityRoot(root)) {
+			const entityChoices = self.getEntityChoices(root)
+			options.push({
+				id: `index_${axis + 1}`,
+				type: 'dropdown',
+				label: root.slice(0, -1),
+				choices: entityChoices.length ? entityChoices : [{ id: 0, label: `No ${root.toLowerCase()} found` }],
+				default: entityChoices[0]?.id ?? 0,
+			})
+			return
+		}
 		options.push({
 			id: `index_${axis + 1}`,
 			type: 'multidropdown',
@@ -100,7 +116,20 @@ function actionOptions(
 	if (isNoArgs(row)) return options
 	const mappedChoices = getMappedChoices(row)
 	if (mappedChoices) {
-		options.push({ id: 'value', type: 'dropdown', label: 'Value', choices: mappedChoices, default: mappedChoices[0]?.id ?? 0 })
+		const label = row.oscPath.endsWith('/Recall_Scope') ? 'Scope' : 'Value'
+		options.push({ id: 'value', type: 'dropdown', label, choices: mappedChoices, default: mappedChoices[0]?.id ?? 0 })
+		return options
+	}
+	if (row.valueSelectorLabel) {
+		const root = row.oscPath.split('/').filter(Boolean)[0]
+		const choices = root && hasEntityRoot(root) ? self.getEntityChoices(root) : []
+		options.push({
+			id: 'value',
+			type: 'dropdown',
+			label: row.valueSelectorLabel,
+			choices: choices.length ? choices : [{ id: 0, label: 'No choices found' }],
+			default: choices[0]?.id ?? 0,
+		})
 		return options
 	}
 	const type = oscDataType(row.dataType)
@@ -136,16 +165,124 @@ function actionOptions(
 	return options
 }
 
+type PresetOptionSet = {
+	options: SomeCompanionActionInputField[]
+	sectionIds: Map<string, { item?: string; target?: string; group?: string }>
+}
+
+function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: CommandRow[]): PresetOptionSet {
+	const sections = self.getPresetSections()
+	const options: SomeCompanionActionInputField[] = [{
+		id: 'section',
+		type: 'dropdown',
+		label: 'Section',
+		choices: sections.length ? sections.map((section) => ({ id: section, label: section })) : [{ id: '', label: 'No presets found' }],
+		default: sections[0] ?? '',
+		disableAutoExpression: true,
+	}]
+	const sectionIds = new Map<string, { item?: string; target?: string; group?: string }>()
+	const schema = row.actionSchema || 'presetItem'
+	for (const [sectionIndex, section] of sections.entries()) {
+		const visible = `$(options:section) == ${JSON.stringify(section)}`
+		const ids: { item?: string; target?: string; group?: string } = {}
+		if (schema === 'presetRecall' || schema === 'presetUpdate') {
+			const item = `preset_${sectionIndex}`
+			ids.item = item
+			const choices = self.getPresetChoicesForSection(section)
+			options.push({
+				id: item,
+				type: 'dropdown',
+				label: 'Preset',
+				choices: choices.length ? choices : [{ id: 0, label: 'No presets in this section' }],
+				default: choices[0]?.id ?? 0,
+				isVisibleExpression: visible,
+			})
+		} else if (row.oscPath.includes('*')) {
+			const item = `index_1_${sectionIndex}`
+			ids.item = item
+			const choices = schema === 'presetGroup'
+				? self.getPresetGroupRenameChoices(section)
+				: self.getPresetChoicesForSection(section)
+			options.push({
+				id: item,
+				type: 'dropdown',
+				label: schema === 'presetGroup' ? 'Group' : 'Preset',
+				choices: choices.length ? choices : [{ id: 0, label: 'No items in this section' }],
+				default: choices[0]?.id ?? 0,
+				isVisibleExpression: visible,
+			})
+		}
+		if (schema === 'presetRecall' || schema === 'presetUpdate' || schema === 'presetCreate') {
+			const target = `target_${sectionIndex}`
+			ids.target = target
+			const choices = self.getPresetTargetChoices(section)
+			const targetChoices = schema === 'presetRecall' || schema === 'presetCreate' ? [{ id: 'all', label: 'All' }, ...choices] : choices
+			if (schema === 'presetUpdate') {
+				options.push({
+					id: target,
+					type: 'dropdown',
+					label: 'Value',
+					choices: targetChoices,
+					default: choices[0]?.id ?? 1,
+					isVisibleExpression: visible,
+				})
+			} else {
+				options.push({
+					id: target,
+					type: 'multidropdown',
+					label: 'Value',
+					choices: targetChoices,
+					default: choices[0] ? [choices[0].id] : [],
+					sortSelection: true,
+					isVisibleExpression: visible,
+				})
+			}
+		}
+		if (schema === 'presetCreate') {
+			const group = `group_${sectionIndex}`
+			ids.group = group
+			const choices = self.getPresetGroupChoices(section)
+			options.push({
+				id: group,
+				type: 'dropdown',
+				label: 'Group',
+				choices: choices.length ? choices : [{ id: '', label: '(No Group)' }],
+				default: choices[0]?.id ?? '',
+				isVisibleExpression: visible,
+			})
+		}
+		sectionIds.set(section, ids)
+	}
+	if (schema === 'presetRecall') {
+		const scopeRow = rows.find((candidate) => candidate.oscPath === '/Presets/Recall_Scope')
+		const choices = scopeRow ? getMappedChoices(scopeRow) : undefined
+		if (choices?.length) options.push({ id: 'scope', type: 'dropdown', label: 'Scope', choices, default: choices[0]!.id })
+	}
+	if (schema === 'presetCreate') options.push({ id: 'value', type: 'textinput', label: 'Name', default: '' })
+	else if (!['presetRecall', 'presetUpdate'].includes(schema)) {
+		const valueOptions = actionOptions(self, row, row.oscPath, [])
+		if (row.dataType === 'String') for (const option of valueOptions) if (option.id === 'value') option.label = 'Name'
+		options.push(...valueOptions)
+	}
+	return { options, sectionIds }
+}
+
 export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 	const actions: CompanionActionDefinitions<ActionsSchema> = {}
 	for (const row of rows) {
 		if (!isWritable(row)) continue
+		const root = row.oscPath.split('/').filter(Boolean)[0]
+		const presetFields = root === 'Presets' ? presetActionOptions(self, row, rows) : undefined
 		const valueSelectorPath = getValueSelectorPath(row, rows)
 		const selectorDefinitions = valueSelectorPath
 			? [{ path: valueSelectorPath, axis: 0 }]
 			: Array.from({ length: getPathParameterCount(row.oscPath) }, (_, axis) => ({ path: row.oscPath, axis }))
-		const options = actionOptions(self, row, valueSelectorPath ?? row.oscPath, selectorDefinitions)
-		const selectorChoices = selectorDefinitions.map(({ path, axis }) => self.getParameterChoices(path, axis))
+		const selectorChoices = selectorDefinitions.map(({ path, axis }) =>
+			root && hasEntityRoot(root)
+				? self.getEntityChoices(root)
+				: self.getParameterChoices(path, axis),
+		)
+		const options = presetFields?.options ?? actionOptions(self, row, valueSelectorPath ?? row.oscPath, selectorDefinitions, selectorChoices)
 		const wireType = oscDataType(row.dataType)
 		const booleanValue = isBooleanDataType(row.dataType) || (row.dataType === 'Int' && row.min === 0 && row.max === 1)
 		const id = row.oscPath
@@ -153,10 +290,47 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 			name: row.name,
 			description: row.description,
 			options,
-			...(isReadable(row) ? {
+			...(isReadable(row) && !isNoArgs(row) && row.actionSchema !== 'presetUpdate' ? {
 				learn: async (event: CompanionActionEvent<ActionOptions>) => {
-					if (isNoArgs(row) || valueSelectorPath || event.options.value !== undefined) return {}
+					let selectedIndex: number | undefined
+					if (presetFields) {
+						const section = String(event.options.section ?? self.getPresetSections()[0] ?? '')
+						const sectionOption = presetFields.sectionIds.get(section)
+						if (!sectionOption) return {}
+						selectedIndex = sectionOption.item
+							? Number(event.options[sectionOption.item] ?? self.getPresetChoicesForSection(section)[0]?.id)
+							: undefined
+					} else if (getPathParameterCount(row.oscPath)) {
+						selectedIndex = Number(event.options.index_1 ?? selectorChoices[0]?.[0]?.id)
+					}
+					if (row.learnSchema && selectedIndex !== undefined) {
+						const entityRoot = row.oscPath.split('/').filter(Boolean)[0]
+						const record = await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, selectedIndex)
+						const field = record && typeof record === 'object' && !Array.isArray(record)
+							? (record as Record<string, unknown>)[row.learnSchema]
+							: undefined
+						return typeof field === 'number' ? { value: numberFromWire(row, field) }
+							: typeof field === 'string' ? { value: field }
+							: {}
+					}
+					if (row.feedbackSchema === 'indexedRecord' && selectedIndex !== undefined) {
+						const record = await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)
+						const valueKey = getPathAxisSegment(row.oscPath, getPathParameterCount(row.oscPath) - 1)
+						const value = record && typeof record === 'object' && !Array.isArray(record) && valueKey
+							? (record as Record<string, unknown>)[valueKey]
+							: undefined
+						return typeof value === 'number' ? { value: numberFromWire(row, value) }
+							: typeof value === 'string' ? { value }
+							: {}
+					}
 					const paths = selectedPaths(row.oscPath, event.options, selectorChoices)
+					if (valueSelectorPath) {
+						const value = await self.getOscValueOrQuery(row.oscPath)
+						if (!Array.isArray(value)) return {}
+						const indexes = optionIndexes(event.options.index_1, selectorChoices[0]!)
+						const selected = value[indexes[0]! - 1]
+						return typeof selected === 'number' ? { value: numberFromWire(row, selected) } : {}
+					}
 					const value = await self.getOscValueOrQuery(paths[0]!)
 					if (typeof value === 'number') return { value: numberFromWire(row, value) }
 					if (typeof value === 'string') return { value }
@@ -164,7 +338,59 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 				},
 			} : {}),
 			callback: async (event: CompanionActionEvent<ActionOptions>) => {
-				const paths = selectedPaths(row.oscPath, event.options, selectorChoices)
+				if (presetFields) {
+					const section = String(event.options.section ?? self.getPresetSections()[0] ?? '')
+					const sectionOption = presetFields.sectionIds.get(section)
+					if (!sectionOption) return
+					if (row.actionSchema === 'presetRecall') {
+						const presets = self.getPresetChoicesForSection(section)
+						const presetIndex = Number(event.options[sectionOption.item!] ?? presets[0]?.id)
+						if (!presets.some((choice) => choice.id === presetIndex)) return
+						const targets = self.getPresetTargetChoices(section)
+						const targetIndexes = optionIndexes(event.options[sectionOption.target!], [{ id: 'all' }, ...targets], targets[0]?.id ?? 1)
+						self.send_osc('/Presets/Recall_Scope', [{ type: 'i', value: Math.trunc(Number(event.options.scope ?? 0)) }])
+						for (const target of targetIndexes) self.send_osc(`/Presets/Recall_Preset/${presetIndex}`, [{ type: 's', value: `/${section}/${target}` }])
+						return
+					}
+					if (row.actionSchema === 'presetUpdate') {
+						const presets = self.getPresetChoicesForSection(section)
+						const presetIndex = Number(event.options[sectionOption.item!] ?? presets[0]?.id)
+						const targets = self.getPresetTargetChoices(section)
+						const target = Number(event.options[sectionOption.target!] ?? targets[0]?.id)
+						if (presets.some((choice) => choice.id === presetIndex) && targets.some((choice) => choice.id === target)) {
+							self.send_osc(`/Presets/Update_Preset/${presetIndex}`, [{ type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` }])
+						}
+						return
+					}
+					if (row.actionSchema === 'presetCreate') {
+						const targets = self.getPresetTargetChoices(section)
+						const targetIndexes = optionIndexes(event.options[sectionOption.target!], [{ id: 'all' }, ...targets], targets[0]?.id ?? 1)
+						const group = String(event.options[sectionOption.group!] ?? '')
+						const name = String(event.options.value ?? '').trim()
+						for (const target of targetIndexes) {
+							const previous = new Set(self.getEntityIndexes('Presets'))
+							const refreshed = self.waitForEntityRefresh('Presets')
+							self.send_osc(row.oscPath, [{ type: 's', value: group }, { type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` }])
+							if (!await refreshed) continue
+							const created = self.getEntityIndexes('Presets').find((index) => !previous.has(index))
+							if (created !== undefined && name) {
+								self.send_osc(`/Presets/Rename_Preset/${created}`, [{ type: 's', value: name }])
+							}
+						}
+						return
+					}
+					const indexes = row.oscPath.includes('*') ? [Number(event.options[sectionOption.item!] ?? 0)] : []
+					const path = materializePath(row.oscPath, indexes)
+					if (booleanValue && Number(event.options.value) === 2) {
+						const current = await self.getOscValueOrQuery(path)
+						if (typeof current !== 'number' || (current !== 0 && current !== 1)) return
+						self.send_osc(path, wireArguments(row, current === 0 ? 1 : 0))
+					} else {
+						self.send_osc(path, wireArguments(row, event.options.value))
+					}
+					return
+				}
+				const paths = selectedPaths(row.oscPath, event.options, selectorChoices, root && hasEntityRoot(root) ? 0 : 1)
 				if (valueSelectorPath) {
 					const current = await self.getOscValueOrQuery(row.oscPath)
 					if (!Array.isArray(current) || current.some((value) => typeof value !== 'number')) {

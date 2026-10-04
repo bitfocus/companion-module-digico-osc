@@ -1,0 +1,10 @@
+{
+	"records": {
+		"/Snapshots/name": "index,num/100/2,group,name",
+		"/Snapshots/notes": "index,_1,_2,_3,note",
+		"/Macros/Buttons/state/*": "index,state,name",
+		"/Macros/name": "index,name",
+		"/Presets/name": "index,channelCount,unknown,section,group,name"
+	},
+	"targetCounts": { "FX": 16 }
+}

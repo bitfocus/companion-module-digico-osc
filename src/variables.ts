@@ -1,4 +1,5 @@
 import type ModuleInstance from './main.js'
+import { entityRoots } from './entityRecords.js'
 
 export const PARAMETER_MAXIMUMS = {
 	input_channels: 'Input Channels',
@@ -13,6 +14,9 @@ export const PARAMETER_MAXIMUMS = {
 
 export const MODULE_VARIABLES = {
 	...PARAMETER_MAXIMUMS,
+	...Object.fromEntries(entityRoots().map((root) => [
+		`${root.toLowerCase()}_count`, `${root} count`,
+	])),
 	filename: 'Filename',
 } as const
 

@@ -12,6 +12,11 @@ export type CommandRow = {
 	description: string
 	units: string
 	scale: number
+	actionSchema: string
+	feedbackSchema: string
+	refreshEntity: string
+	valueSelectorLabel: string
+	learnSchema: string
 }
 
 function parseCsvLine(line: string): string[] {
@@ -54,44 +59,51 @@ export function commandNameFromPath(path: string): string {
 	return `[${formatWords(category!)}] ${name.map(formatWords).join('/') || formatWords(category!)}`
 }
 
-function csvPath(): string {
-	return resolve(dirname(fileURLToPath(import.meta.url)), '../digico_osc.csv')
+function csvPath(name: string): string {
+	return resolve(dirname(fileURLToPath(import.meta.url)), `../${name}`)
 }
 
 export function loadCommandTable(): CommandRow[] {
-	const file = csvPath()
-	const lines = readFileSync(file, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean)
-	if (lines.length < 2) throw new Error(`DiGiCo OSC command table is empty: ${file}`)
-	const headers = parseCsvLine(lines[0]!)
 	const required = ['osc_path', 'data_type', 'osc_min', 'osc_max', 'rw', 'description', 'units', 'Scale']
-	const columns = Object.fromEntries(required.map((name) => {
-		const index = headers.indexOf(name)
-		if (index < 0) throw new Error(`Missing "${name}" column in ${file}`)
-		return [name, index]
-	})) as Record<(typeof required)[number], number>
 	const parseBound = (value: string | undefined): number | undefined =>
 		value === undefined || value.trim() === '' || !Number.isFinite(Number(value)) ? undefined : Number(value)
 
-	return lines.slice(1).map((line, index) => {
-		const values = parseCsvLine(line)
-		const get = (column: (typeof required)[number]) => values[columns[column]] ?? ''
-		const oscPath = get('osc_path').trim()
-		if (!oscPath) throw new Error(`Missing OSC path in command table row ${index + 2}`)
-		const scale = Number(get('Scale'))
-		if (!Number.isFinite(scale) || scale <= 0) {
-			throw new Error(`Invalid Scale in command table row ${index + 2}: ${get('Scale')}`)
-		}
-		return {
-			name: commandNameFromPath(oscPath),
-			oscPath,
-			dataType: get('data_type').trim(),
-			min: parseBound(get('osc_min')),
-			max: parseBound(get('osc_max')),
-			rw: get('rw').trim().toUpperCase(),
-			description: get('description').trim(),
-			units: get('units').trim(),
-			scale,
-		}
+	return ['digico_osc.csv', 'digico_entities.csv'].flatMap((filename) => {
+		const file = csvPath(filename)
+		const lines = readFileSync(file, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean)
+		if (lines.length < 2) throw new Error(`DiGiCo OSC command table is empty: ${file}`)
+		const headers = parseCsvLine(lines[0]!)
+		const columns = Object.fromEntries([...required, 'action_schema', 'feedback_schema', 'refresh_entity', 'value_selector_label', 'learn_schema'].map((name) => {
+			const index = headers.indexOf(name)
+			if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
+			return [name, index]
+		})) as Record<(typeof required)[number] | 'action_schema' | 'feedback_schema' | 'refresh_entity' | 'value_selector_label' | 'learn_schema', number>
+		return lines.slice(1).map((line, index) => {
+			const values = parseCsvLine(line)
+			const get = (column: keyof typeof columns) => columns[column] < 0 ? '' : values[columns[column]] ?? ''
+			const oscPath = get('osc_path').trim()
+			if (!oscPath) throw new Error(`Missing OSC path in ${file}, row ${index + 2}`)
+			const scale = Number(get('Scale'))
+			if (!Number.isFinite(scale) || scale <= 0) {
+				throw new Error(`Invalid Scale in ${file}, row ${index + 2}: ${get('Scale')}`)
+			}
+			return {
+				name: commandNameFromPath(oscPath),
+				oscPath,
+				dataType: get('data_type').trim(),
+				min: parseBound(get('osc_min')),
+				max: parseBound(get('osc_max')),
+				rw: get('rw').trim().toUpperCase(),
+				description: get('description').trim(),
+				units: get('units').trim(),
+				scale,
+				actionSchema: get('action_schema').trim(),
+				feedbackSchema: get('feedback_schema').trim(),
+				refreshEntity: get('refresh_entity').trim(),
+				valueSelectorLabel: get('value_selector_label').trim(),
+				learnSchema: get('learn_schema').trim(),
+			}
+		})
 	})
 }
 

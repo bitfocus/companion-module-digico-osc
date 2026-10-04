@@ -15,6 +15,9 @@
 	"comp-multiband-desser": {
 		"values": { "0": "Comp", "1": "Multiband", "2": "DeEsser" }
 	},
+	"recall_scope": {
+		"values": { "0": "All", "1": "EQ", "2": "Dynamics" }
+	},
 	"eq_curve_1": {
 		"values": { "1": "Bell", "4": "High Shelf" }
 	},

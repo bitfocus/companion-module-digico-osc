@@ -15,6 +15,7 @@ import { deriveSelectorProviders, selectorProviderForSegment, type SelectorProvi
 import { createMixer, type digico } from './mixers.js'
 import { IpadRelay } from './ipadRelay.js'
 import { OSC_QUERY_TIMEOUT_MS, type OSCValue } from './osc.js'
+import { entityRoots, entityTargetCount, entityTargetSections, parseEntityRecord } from './entityRecords.js'
 import { UpdateVariableDefinitions, type ModuleVariableKey, type VariablesSchema } from './variables.js'
 export { UpgradeScripts } from './upgrades.js'
 
@@ -43,11 +44,15 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	private selectorProviders: SelectorProvider[] = []
 	private mixer: digico | undefined
 	private ipadRelay: IpadRelay | undefined
-	private readonly oscValues = new Map<string, JsonValue>()
+	private readonly dataStore = new Map<string, JsonValue>()
+	private readonly entityRecords = new Map<string, Map<number, Record<string, number | string>>>()
+	private readonly indexedRecords = new Map<string, Map<number, Record<string, number | string>>>()
+	private readonly entityCounts = new Map<string, number>()
 	private readonly selectorCounts = new Map<string, number>()
 	private readonly feedbackPaths = new Map<string, string>()
-	private readonly sentFeedbackQueries = new Set<string>()
 	private readonly pendingValueReads = new Map<string, Promise<JsonValue | undefined>>()
+	private readonly entityRefreshes = new Map<string, Promise<void>>()
+	private readonly entityRefreshWaiters = new Map<string, Array<() => void>>()
 	private readonly actionRecorder = new IncomingActionRecorder((action, uniqueId) => this.recordAction(action, uniqueId))
 	private discoveryGeneration = 0
 	private definitionsTimer: ReturnType<typeof setTimeout> | undefined
@@ -95,21 +100,18 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		return this.ipadRelay?.shouldSuppressFilenameReply(path) ?? false
 	}
 
-	public getOscValue(path: string): JsonValue | undefined {
-		return this.oscValues.get(path)
-	}
-
-	public async getOscValueOrQuery(path: string, timeoutMs = OSC_QUERY_TIMEOUT_MS): Promise<JsonValue | undefined> {
-		if (this.oscValues.has(path)) return this.oscValues.get(path)
+	public async getOscValueOrQuery(path: string, timeoutMs = OSC_QUERY_TIMEOUT_MS, queryIndex?: number): Promise<JsonValue | undefined> {
+		const cacheKey = queryIndex === undefined ? path : `${path}|${queryIndex}`
+		if (this.dataStore.has(cacheKey)) return this.dataStore.get(cacheKey)
 		if (!this.mixer) return undefined
-		const existing = this.pendingValueReads.get(path)
+		const existing = this.pendingValueReads.get(cacheKey)
 		if (existing) return existing
-		const request = this.mixer.queryOsc(path, undefined, timeoutMs).then(() => this.oscValues.get(path))
-		this.pendingValueReads.set(path, request)
+		const request = this.mixer.queryOsc(path, queryIndex, timeoutMs).then(() => this.dataStore.get(cacheKey))
+		this.pendingValueReads.set(cacheKey, request)
 		try {
 			return await request
 		} finally {
-			if (this.pendingValueReads.get(path) === request) this.pendingValueReads.delete(path)
+			if (this.pendingValueReads.get(cacheKey) === request) this.pendingValueReads.delete(cacheKey)
 		}
 	}
 
@@ -118,7 +120,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		const provider = selectorProviderForSegment(segment, this.selectorProviders)
 		const choicesByIndex = new Set<number>()
 		const matcher = pathMatcher(path)
-		for (const cachedPath of this.oscValues.keys()) {
+		for (const cachedPath of this.dataStore.keys()) {
 			const match = cachedPath.match(matcher)
 			const index = Number(match?.[axis + 1])
 			if (Number.isInteger(index)) choicesByIndex.add(index)
@@ -127,7 +129,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		const names = new Map<number, string>()
 		if (provider) {
 			const nameMatcher = pathMatcher(provider.namePath)
-			for (const [cachedPath, value] of this.oscValues) {
+			for (const [cachedPath, value] of this.dataStore) {
 				const match = cachedPath.match(nameMatcher)
 				const index = Number(match?.[1])
 				if (Number.isInteger(index) && typeof value === 'string') {
@@ -150,21 +152,166 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		]
 	}
 
-	public watchFeedbackValue(feedbackId: string, path: string): void {
-		const previousPath = this.feedbackPaths.get(feedbackId)
-		if (previousPath && previousPath !== path && ![...this.feedbackPaths.values()].includes(previousPath)) {
-			this.sentFeedbackQueries.delete(previousPath)
+	public getEntityChoices(root: string, section?: string): Array<{ id: number; label: string }> {
+		const records = this.entityRecords.get(root)
+		if (!records) return []
+		return [...records.values()]
+			.filter((record) => section === undefined || String(record.section ?? '').trim() === section.trim())
+			.sort((left, right) => root === 'Presets'
+				? String(left.group ?? '').localeCompare(String(right.group ?? '')) || Number(left.index) - Number(right.index)
+				: Number(left.index) - Number(right.index))
+			.map((record) => {
+				const index = Number(record.index)
+				const name = String(record.name ?? `${root.slice(0, -1)} ${index}`)
+				if (root === 'Presets') {
+					const group = String(record.group ?? '').trim()
+					return { id: index, label: `${group ? `[${group}] ` : ''}${name}` }
+				}
+				const details = [
+					record.num === undefined ? '' : `[${record.num}]`,
+					record.section === undefined ? '' : `[${record.section}]`,
+					record.group ? `${record.group}/` : '',
+				].filter(Boolean).join(' ')
+				const label = `${index}: ${details ? `${details} ` : ''}${name}`
+				return { id: index, label }
+			})
+	}
+
+	public getEntitySections(root: string): string[] {
+		return [...new Set([...(this.entityRecords.get(root)?.values() ?? [])]
+			.map((record) => String(record.section ?? '').trim())
+			.filter(Boolean))]
+			.sort((left, right) => left.localeCompare(right))
+	}
+
+	public getPresetSections(): string[] {
+		const sections = new Map<string, string>()
+		const addSection = (section: string): void => {
+			const value = section.trim()
+			const key = value.toLowerCase().replace(/[\s_-]+/g, '')
+			if (value && !sections.has(key)) sections.set(key, value)
 		}
+		for (const record of this.entityRecords.get('Presets')?.values() ?? []) addSection(String(record.section ?? ''))
+		for (const provider of this.selectorProviders) {
+			const section = provider.section.replace(/_/g, ' ')
+			addSection(section)
+			if (provider.section.endsWith('_Outputs')) addSection(provider.section.replace(/_Outputs$/, '_Mix'))
+		}
+		for (const section of entityTargetSections()) addSection(section)
+		return [...sections.values()].sort((a, b) => a.localeCompare(b))
+	}
+
+	public getPresetChoicesForSection(section: string): Array<{ id: number; label: string }> {
+		return this.getEntityChoices('Presets', section)
+	}
+
+	public getPresetTargetChoices(section: string): Array<{ id: number; label: string }> {
+		const provider = this.presetTargetProvider(section)
+		const targetCount = entityTargetCount(section)
+		if (targetCount !== undefined) return Array.from({ length: targetCount }, (_, index) => ({ id: index + 1, label: `${index + 1}: ${section} ${index + 1}` }))
+		return provider
+			? this.getParameterChoices(provider.namePath, 0).filter((choice): choice is { id: number; label: string } => typeof choice.id === 'number')
+			: []
+	}
+
+	public getPresetTargetSection(section: string): string {
+		return this.presetTargetProvider(section)?.section.replace(/_/g, ' ') ?? section
+	}
+
+	private presetTargetProvider(section: string): SelectorProvider | undefined {
+		const key = section.trim().replace(/[\s-]+/g, '_').replace(/_Mix$/i, '_Outputs').toLowerCase()
+		return this.selectorProviders.find((entry) => entry.key === key)
+	}
+
+	public getPresetGroupChoices(section: string): Array<{ id: string; label: string }> {
+		const groups = new Set<string>()
+		for (const record of this.entityRecords.get('Presets')?.values() ?? []) {
+			if (String(record.section ?? '').trim() !== section.trim()) continue
+			groups.add(String(record.group ?? ''))
+		}
+		return [...groups].sort((a, b) => a.localeCompare(b)).map((group) => ({ id: group, label: group || '(No Group)' }))
+	}
+
+	public getPresetGroupRenameChoices(section: string): Array<{ id: number; label: string }> {
+		const groups = new Map<string, { index: number; group: string }>()
+		for (const record of this.entityRecords.get('Presets')?.values() ?? []) {
+			if (String(record.section ?? '').trim() !== section.trim()) continue
+			const group = String(record.group ?? '')
+			const previous = groups.get(group)
+			const index = Number(record.index)
+			if (!previous || index < previous.index) groups.set(group, { index, group })
+		}
+		return [...groups.values()].sort((a, b) => a.group.localeCompare(b.group)).map(({ index, group }) => ({
+			id: index,
+			label: group || '(No Group)',
+		}))
+	}
+
+	public getEntityIndexes(root: string): number[] {
+		return [...(this.entityRecords.get(root)?.keys() ?? [])]
+	}
+
+	public refreshEntityList(root: string): Promise<void> {
+		const current = this.entityRefreshes.get(root)
+		if (current) return current
+		const refresh = this.loadEntityList(root).finally(() => {
+			this.entityRefreshes.delete(root)
+			for (const resolve of this.entityRefreshWaiters.get(root) ?? []) resolve()
+			this.entityRefreshWaiters.delete(root)
+		})
+		this.entityRefreshes.set(root, refresh)
+		return refresh
+	}
+
+	public waitForEntityRefresh(root: string, timeoutMs = 3000): Promise<boolean> {
+		return new Promise((resolve) => {
+			let finished = false
+			const finish = (refreshed: boolean): void => {
+				if (finished) return
+				finished = true
+				clearTimeout(timeout)
+				resolve(refreshed)
+			}
+			const onRefresh = (): void => finish(true)
+			const waiters = this.entityRefreshWaiters.get(root) ?? []
+			waiters.push(onRefresh)
+			this.entityRefreshWaiters.set(root, waiters)
+			const timeout = setTimeout(() => {
+				const current = this.entityRefreshWaiters.get(root)
+				if (current) this.entityRefreshWaiters.set(root, current.filter((waiter) => waiter !== onRefresh))
+				finish(false)
+			}, timeoutMs)
+		})
+	}
+
+	private async loadEntityList(root: string): Promise<void> {
+		if (!this.mixer) return
+		const generation = this.discoveryGeneration
+		const countPath = `/${root}/count`
+		this.dataStore.delete(countPath)
+		await this.mixer.queryOsc(countPath, undefined, 1000)
+		if (generation !== this.discoveryGeneration) return
+		const countValue = this.dataStore.get(countPath)
+		const total = typeof countValue === 'number' ? Math.max(0, Math.trunc(countValue)) : 0
+		this.entityCounts.set(root, total)
+		this.entityRecords.set(root, new Map())
+		if (total > 0) {
+			await this.mixer.queryOsc(`/${root}/names`, undefined, 1000)
+			const deadline = Date.now() + 2000
+			while (generation === this.discoveryGeneration && (this.entityRecords.get(root)?.size ?? 0) < total && Date.now() < deadline) {
+				await delay(25)
+			}
+		}
+		this.publishCounts()
+		this.scheduleDefinitionRefresh()
+	}
+
+	public watchFeedbackValue(feedbackId: string, path: string): void {
 		this.feedbackPaths.set(feedbackId, path)
-		if (this.oscValues.has(path) || this.sentFeedbackQueries.has(path) || !this.mixer) return
-		this.sentFeedbackQueries.add(path)
-		void this.mixer.queryOsc(path)
 	}
 
 	public releaseFeedbackValue(feedbackId: string): void {
-		const path = this.feedbackPaths.get(feedbackId)
 		this.feedbackPaths.delete(feedbackId)
-		if (path && ![...this.feedbackPaths.values()].includes(path)) this.sentFeedbackQueries.delete(path)
 	}
 
 	public handleStartStopRecordActions(isRecording: boolean): void {
@@ -172,28 +319,42 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		logger.debug(`Action recorder ${isRecording ? 'started' : 'stopped'}`)
 	}
 
-	public onOscMessage(path: string, args: OSCValue[]): void {
+	public onOscMessage(path: string, args: OSCValue[], isQueryReply = false): void {
 		const suppressLog = this.shouldSuppressIpadFilenameReply(path)
 		const incoming = args.map(truncateFloat)
-		const cachedValue: JsonValue | undefined = incoming.length === 0
-			? undefined
-			: path.endsWith('/modes') || incoming.length > 1
-				? incoming.map(safeOscValue)
-				: safeOscValue(incoming[0]!)
-		const previous = this.oscValues.get(path)
-		if (cachedValue !== undefined) {
-			this.oscValues.set(path, cachedValue)
-			this.sentFeedbackQueries.delete(path)
-			if (!suppressLog) logger.debug(`Cached OSC value ${path} = ${JSON.stringify(cachedValue)}`)
-			if (path === '/Console/Session/Filename' && typeof cachedValue === 'string') {
-				this.setVariableValues({ filename: cachedValue })
+		const record = parseEntityRecord(path, incoming)
+		const root = record ? record.schemaPath.split('/').filter(Boolean)[0]! : undefined
+		if (record && root && record.schemaPath === `/${root}/name`) {
+			let records = this.entityRecords.get(root)
+			if (!records) this.entityRecords.set(root, (records = new Map()))
+			records.set(record.index, record.value)
+		} else if (record) {
+			let records = this.indexedRecords.get(record.schemaPath)
+			if (!records) this.indexedRecords.set(record.schemaPath, (records = new Map()))
+			records.set(record.index, record.value)
+		}
+		const cachedValue: JsonValue = record?.value ?? (incoming.length === 0 || path.endsWith('/modes') || incoming.length > 1
+			? incoming.map(safeOscValue)
+			: safeOscValue(incoming[0]!))
+		const previous = this.dataStore.get(path)
+		this.dataStore.set(path, cachedValue)
+		if (record) this.dataStore.set(`${record.schemaPath}|${record.index}`, record.value)
+		if (!suppressLog) logger.debug(`Cached OSC value ${path} = ${JSON.stringify(cachedValue)}`)
+		if (path === '/Console/Session/Filename' && typeof cachedValue === 'string') {
+			this.setVariableValues({ filename: cachedValue })
+		}
+		if (path.endsWith('/name') && JSON.stringify(previous) !== JSON.stringify(cachedValue)) this.scheduleDefinitionRefresh()
+		const changed = JSON.stringify(previous) !== JSON.stringify(cachedValue)
+		const feedbackIds = [...this.feedbackPaths]
+			.filter(([, watchedPath]) => watchedPath === path)
+			.map(([feedbackId]) => feedbackId)
+		if (changed && feedbackIds.length) this.checkFeedbacksById(...feedbackIds)
+		if (!isQueryReply) {
+			for (const root of new Set(this.commandRows
+				.filter((row) => row.refreshEntity && pathMatcher(row.oscPath).test(path))
+				.map((row) => row.refreshEntity))) {
+				void this.refreshEntityList(root)
 			}
-			if (path.endsWith('/name') && JSON.stringify(previous) !== JSON.stringify(cachedValue)) this.scheduleDefinitionRefresh()
-			const changed = JSON.stringify(previous) !== JSON.stringify(cachedValue)
-			const feedbackIds = [...this.feedbackPaths]
-				.filter(([, watchedPath]) => watchedPath === path)
-				.map(([feedbackId]) => feedbackId)
-			if (changed && feedbackIds.length) this.checkFeedbacksById(...feedbackIds)
 		}
 		this.actionRecorder.record(path, incoming, this.commandRows)
 		const provider = this.selectorProviders.find((entry) => entry.countPath === path)
@@ -244,7 +405,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		}
 		if (generation !== this.discoveryGeneration) return
 		for (const provider of this.selectorProviders) {
-			const reported = this.oscValues.get(provider.countPath)
+			const reported = this.dataStore.get(provider.countPath)
 			const count = typeof reported === 'number'
 				? Math.max(0, Math.min(provider.maxCount, Math.trunc(reported)))
 				: await this.discoverCount(provider.namePath, provider.maxCount, generation)
@@ -255,9 +416,18 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			}
 			if (generation !== this.discoveryGeneration) return
 		}
+		await this.discoverEntityLists(generation)
 		this.publishCounts()
 		this.updateActions()
 		this.updateFeedbacks()
+	}
+
+	private async discoverEntityLists(generation: number): Promise<void> {
+		if (!this.mixer) return
+		for (const root of entityRoots()) {
+			await this.refreshEntityList(root)
+			if (generation !== this.discoveryGeneration) return
+		}
 	}
 
 	private async discoverCount(namePath: string, maximum: number, generation: number): Promise<number> {
@@ -286,6 +456,10 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				? String(this.selectorCounts.get(provider.key))
 				: ''
 		}
+		for (const root of entityRoots()) {
+			const key = `${root.toLowerCase()}_count` as ModuleVariableKey
+			values[key] = this.entityCounts.has(root) ? String(this.entityCounts.get(root)) : ''
+		}
 		this.setVariableValues(values)
 	}
 
@@ -301,10 +475,12 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	private resetConnectionState(): void {
-		this.oscValues.clear()
+		this.dataStore.clear()
+		this.entityRecords.clear()
+		this.indexedRecords.clear()
+		this.entityCounts.clear()
 		this.selectorCounts.clear()
 		this.feedbackPaths.clear()
-		this.sentFeedbackQueries.clear()
 		this.publishCounts()
 		this.setVariableValues({ filename: '' })
 	}
