@@ -3,10 +3,10 @@
 # DiGiCo SD / Quantum --- DiGiCo Module OSC Setup
 
 To use this module, configure a **DiGiCo Pad** external-control
-connection on a DiGiCo SD or Quantum console, using:
+connection on a DiGiCo SD or Quantum console, using (as an example):
 
--   **Console Send port:** `7000`
--   **Console Receive port:** `7001`
+- **Console Send port:** `7000`
+- **Console Receive port:** `7001`
 
 > **Port direction is from the console's perspective:**\
 > `7000` = console → Companion\
@@ -43,15 +43,17 @@ This is the IP address of the computer, **not the console IP address**.
 
 Set the DiGiCo Pad device to:
 
-  Setting          Value
-  ------------- --------
-  **Send**        `7000`
-  **Rcv**         `7001`
-  **Enabled**        Yes
+Setting Value
+
+---
+
+**Send** `7000`
+**Rcv** `7001`
+**Enabled** Yes
 
 The resulting network flow is:
 
-``` text
+```text
 DiGiCo Console                      Companion Computer
       │                                    │
       │────── UDP → port 7000 ────────────>│
@@ -63,7 +65,7 @@ DiGiCo Console                      Companion Computer
 
 Therefore, configure the DiGiCo Companion module as follows:
 
-``` text
+```text
 Receive/listen port: 7000
 
 Send destination:
@@ -92,7 +94,7 @@ If the console reports that no commands are enabled:
 
 For an SD8, SD9, SD11, SD12, or SD12-96, load:
 
-``` text
+```text
 iPadv2sd8-9-11-12
 ```
 
@@ -103,7 +105,7 @@ command file** shown in the console's **Load** dialog.
 
 For any Quantum console, load:
 
-``` text
+```text
 ipad_q3
 ```
 
@@ -112,7 +114,7 @@ ipad_q3
 After loading the command file, verify that **Commands Allowed** no
 longer reports:
 
-``` text
+```text
 No commands are enabled
 ```
 
@@ -124,7 +126,7 @@ The External Control window displays the console's **Local IP Address**.
 
 Use this as the destination IP address when the DiGiCo Companion Module sends commands to the console:
 
-``` text
+```text
 Companion → DiGiCo Console
 
 Destination IP:   <console Local IP Address>
@@ -133,7 +135,7 @@ Destination port: 7001
 
 The console sends feedback to the Companion Computer configured in the DiGiCo Pad entry:
 
-``` text
+```text
 DiGiCo Console → Companion Computer
 
 Destination IP:   <Companion Computer IP address>
@@ -144,20 +146,20 @@ Destination port: 7000
 
 In summary, here are the settings:
 
--   **Enable External Control:** Yes
--   **Device Type:** DiGiCo Pad
--   **Send:** `7000`
--   **Rcv:** `7001`
--   **Device Enabled:** Yes
--   **Bundles:** Off initially
--   **Suppress OSC Retransmit:** On
--   **Commands Allowed:** Correct iPad v2 file for the console
+- **Enable External Control:** Yes
+- **Device Type:** DiGiCo Pad
+- **Send:** `7000`
+- **Rcv:** `7001`
+- **Device Enabled:** Yes
+- **Bundles:** Off initially
+- **Suppress OSC Retransmit:** On
+- **Commands Allowed:** Correct iPad v2 file for the console
 
 Keeping **Bundles** off
 
 ## SD12 / SD12-96 Quick Reference
 
-``` text
+```text
 System
  └── External Control
       │
@@ -182,14 +184,14 @@ System
 
 ## Network Summary
 
-``` text
+```text
                  UDP 7000
        OSC feedback / console status
 DiGiCo ───────────────────────────────> Companion
-Console                                  
-                                         
+Console
+
 DiGiCo <─────────────────────────────── Companion
-Console                                  
-       OSC commands / control            
+Console
+       OSC commands / control
                  UDP 7001
 ```
