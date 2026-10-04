@@ -1,8 +1,8 @@
 {
 	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
 	"type": "connection",
-	"id": "digico",
-	"name": "digico",
+	"id": "digico-osc",
+	"name": "digico-osc",
 	"shortname": "digico",
 	"description": "Control of DiGiCo SD and Quantum Consoles via OSC",
 	"version": "0.0.0",
