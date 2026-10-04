@@ -4,15 +4,11 @@ export const PARAMETER_MAXIMUMS = {
 	input_channels: 'Input Channels',
 	aux_outputs: 'Aux Outputs',
 	group_outputs: 'Group Outputs',
-	talkback_outputs: 'Talkback Outputs',
 	matrix_inputs: 'Matrix Inputs',
 	matrix_outputs: 'Matrix Outputs',
 	control_groups: 'Control Groups',
 	graphic_eq: 'Graphic EQs',
 	multis: 'Multis',
-	aux_send: 'Aux Sends',
-	group_send: 'Group Sends',
-	matrix_send: 'Matrix Sends',
 } as const
 
 export const MODULE_VARIABLES = {

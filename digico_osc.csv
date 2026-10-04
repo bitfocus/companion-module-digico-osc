@@ -147,23 +147,23 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Aux_Outputs/*/sends_to_rotaries,BFloat,0,1,RW,Sends-to-rotaries mode state,,1
 /Aux_Outputs/*/solo,BFloat,0,1,RW,Aux output solo state,,1
 /Aux_Outputs/*/solo_1_or_2,Float,0,2,RW,"Aux output solo bus routing: Solo 1, Solo 2, or both",,1
-/Console/Aux_Outputs,Int,12,36,R,Reports the number of aux outputs configured on the console.,,1
+/Console/Aux_Outputs,Int,0,192,R,Reports the number of aux outputs configured on the console.,,1
 /Console/Aux_Outputs/modes,Int,1,2,R,Mono/stereo format for the selected channels or outputs,,1
 /Console/Channels,,,,R,Reports counts for the console channel and output sections.,,1
-/Console/Control_Groups,Int,12,24,R,Reports the number of Control Groups configured on the console.,,1
-/Console/Graphic_EQ,Int,16,24,RW,Reports the number of graphic EQs configured on the console.,,1
-/Console/Group_Outputs,Int,1,12,R,Reports the number of group outputs configured on the console.,,1
+/Console/Control_Groups,Int,0,36,R,Reports the number of Control Groups configured on the console.,,1
+/Console/Graphic_EQ,Int,0,48,R,Reports the number of graphic EQs configured on the console.,,1
+/Console/Group_Outputs,Int,1,192,R,Reports the number of group outputs configured on the console.,,1
 /Console/Group_Outputs/modes,Int,1,6,R,Mono/stereo format for the selected channels or outputs,,1
-/Console/Input_Channels,Int,48,128,R,Reports the number of input channels configured on the console.,,1
+/Console/Input_Channels,Int,0,384,R,Reports the number of input channels configured on the console.,,1
 /Console/Input_Channels/*/group_sends,Int,0,0,R,Group send states,,1
 /Console/Input_Channels/modes,Int,1,2,R,Mono/stereo format for the selected channels or outputs,,1
-/Console/Matrix_Inputs,Int,12,24,R,Reports the number of matrix inputs configured on the console.,,1
-/Console/Matrix_Inputs/*/send_levels,Float,-150,-150,RW,Send level values for selected items - MAYBE?,,1
-/Console/Matrix_Inputs/*/send_ons,BInt,0,0,RW,Send enable states for selected items - MAYBE?,,1
-/Console/Matrix_Outputs,Int,8,24,RW,Reports the number of matrix outputs configured on the console.,,1
-/Console/Multis,Int,0,1,RW,Reports the number of multis configured on the console.,,1
+/Console/Matrix_Inputs,Int,0,64,R,Reports the number of matrix inputs configured on the console.,,1
+/Console/Matrix_Inputs/*/send_levels,Float,-150,0,RW,Send level values for selected items,,1
+/Console/Matrix_Inputs/*/send_ons,BInt,0,1,RW,Send enable states for selected items - MAYBE?,,1
+/Console/Matrix_Outputs,Int,0,64,R,Reports the number of matrix outputs configured on the console.,,1
+/Console/Multis,Int,0,256,R,Reports the number of multis configured on the console.,,1
 /Console/Name,String,,,RW,Console name.,,1
-/Console/Session/!,Int,0,0,RW,Command trigger or query response - MAYBE?,,1
+/Console/Session/!,Int,0,0,W,Command trigger or query response - MAYBE?,,1
 /Console/Session/Filename,String,,,RW,Name of the current session file.,,1
 /Console/Talkback_Outputs,Int,2,2,,Reports the number of talkback outputs configured on the console.,,1
 /Control_Groups/*/aux_send,Float,-18,18,RW,Aux send level,dB,1

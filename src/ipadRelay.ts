@@ -5,6 +5,8 @@ import type { ModuleConfig } from './config.js'
 import { decodeOscPacket } from './osc.js'
 
 const logger = createModuleLogger('ipad')
+const SESSION_FILENAME_PATH = '/Console/Session/Filename'
+const SESSION_FILENAME_QUERY_PATH = `${SESSION_FILENAME_PATH}/?`
 
 /** Forwards raw OSC datagrams between the console transport and the iPad app. */
 export class IpadRelay {
@@ -13,16 +15,13 @@ export class IpadRelay {
 	private listening = false
 	private bound = false
 	private stopped = false
-	private readonly pendingFilenameReplies: Array<{ requestedAt: number; replyLogged: boolean; forwarded: boolean }> = []
 
 	constructor(instance: ModuleInstance, private readonly config: ModuleConfig) {
 		this.socket = instance.createSharedUdpSocket('udp4', (packet, remote) => {
 			if (this.stopped) return
-			const suppressLog = this.isSessionFilenameQueryPacket(packet)
-			if (suppressLog) this.pendingFilenameReplies.push({ requestedAt: Date.now(), replyLogged: false, forwarded: false })
-			if (!suppressLog) this.logPacket('iPad -> module', packet)
+			const hasLoggedMessages = this.logPacket('iPad -> module', packet)
 			this.socket.send(packet, this.config.transmitPort, this.config.ip)
-			if (!suppressLog) logger.debug(`Forwarded ${packet.length} byte(s) from ${remote.address}:${remote.port} to console ${this.config.ip}:${this.config.transmitPort}`)
+			if (hasLoggedMessages) logger.debug(`Forwarded ${packet.length} byte(s) from ${remote.address}:${remote.port} to console ${this.config.ip}:${this.config.transmitPort}`)
 		})
 		this.socketReady = new Promise<void>((resolve) => {
 			this.socket.once('listening', () => resolve())
@@ -42,10 +41,9 @@ export class IpadRelay {
 
 	public forwardConsolePacket(packet: Buffer): void {
 		if (this.stopped || !this.listening) return
-		const suppressLog = this.consumeForwardedFilenameReply(packet)
-		if (!suppressLog) this.logPacket('console -> iPad', packet)
+		const hasLoggedMessages = this.logPacket('console -> iPad', packet)
 		this.socket.send(packet, this.config.ipadTransmitPort, this.config.ipadIp)
-		if (!suppressLog) logger.debug(`Forwarded ${packet.length} byte(s) to iPad ${this.config.ipadIp}:${this.config.ipadTransmitPort}`)
+		if (hasLoggedMessages) logger.debug(`Forwarded ${packet.length} byte(s) to iPad ${this.config.ipadIp}:${this.config.ipadTransmitPort}`)
 	}
 
 	public async destroy(): Promise<void> {
@@ -61,67 +59,23 @@ export class IpadRelay {
 	}
 
 	public shouldSuppressFilenameReply(path: string): boolean {
-		this.expireFilenameReplies()
-		return !this.stopped && this.listening && path === '/Console/Session/Filename' && this.pendingFilenameReplies.length > 0
+		return !this.stopped && this.listening && path === SESSION_FILENAME_PATH
 	}
 
-	public consumeFilenameReply(path: string): void {
-		if (!this.shouldSuppressFilenameReply(path)) return
-		const pending = this.pendingFilenameReplies[0]
-		if (pending) {
-			pending.replyLogged = true
-			this.removeCompletedFilenameReply(pending)
-		}
-	}
-
-	private logPacket(direction: string, packet: Buffer): void {
+	private logPacket(direction: string, packet: Buffer): boolean {
 		try {
+			let logged = false
 			for (const message of decodeOscPacket(packet)) {
+				if (message.path === SESSION_FILENAME_PATH || message.path === SESSION_FILENAME_QUERY_PATH) continue
 				const values = message.args.map((value, index) => ({ type: message.typeTags[index] ?? '?', value }))
 				logger.debug(`${direction} ${message.path} ${JSON.stringify(values)}`)
+				logged = true
 			}
+			return logged
 		} catch (error) {
 			logger.debug(`${direction} opaque OSC datagram (${packet.length} byte(s)): ${String(error)}`)
-		}
-	}
-
-	private isSessionFilenameQueryPacket(packet: Buffer): boolean {
-		try {
-			const messages = decodeOscPacket(packet)
-			return messages.length > 0 && messages.every((message) => message.path === '/Console/Session/Filename/?')
-		} catch {
-			return false
-		}
-	}
-
-	private expireFilenameReplies(): void {
-		const cutoff = Date.now() - 3000
-		while (this.pendingFilenameReplies[0] !== undefined && this.pendingFilenameReplies[0].requestedAt < cutoff) {
-			this.pendingFilenameReplies.shift()
-		}
-	}
-
-	private consumeForwardedFilenameReply(packet: Buffer): boolean {
-		this.expireFilenameReplies()
-		try {
-			const messages = decodeOscPacket(packet)
-			if (!messages.length || !messages.every((message) => message.path === '/Console/Session/Filename' && message.args.length > 0)) {
-				return false
-			}
-			const pending = this.pendingFilenameReplies[0]
-			if (!pending) return false
-			pending.forwarded = true
-			this.removeCompletedFilenameReply(pending)
 			return true
-		} catch {
-			return false
 		}
 	}
 
-	private removeCompletedFilenameReply(reply: { requestedAt: number; replyLogged: boolean; forwarded: boolean }): void {
-		if (reply.replyLogged && reply.forwarded) {
-			const index = this.pendingFilenameReplies.indexOf(reply)
-			if (index >= 0) this.pendingFilenameReplies.splice(index, 1)
-		}
-	}
 }

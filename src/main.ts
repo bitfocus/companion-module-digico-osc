@@ -174,7 +174,6 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	public onOscMessage(path: string, args: OSCValue[]): void {
 		const suppressLog = this.shouldSuppressIpadFilenameReply(path)
-		if (suppressLog) this.ipadRelay?.consumeFilenameReply(path)
 		const incoming = args.map(truncateFloat)
 		const cachedValue: JsonValue | undefined = incoming.length === 0
 			? undefined
@@ -239,6 +238,9 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		if (this.mixer) {
 			await this.mixer.queryOsc('/Console/Channels', undefined, 500)
 			await delay(50)
+			const consoleName = await this.getOscValueOrQuery('/Console/Name')
+			logger.info(`Startup query /Console/Name: ${consoleName === undefined ? 'no reply' : JSON.stringify(consoleName)}`)
+			this.send_osc('/Console/Session/!', [])
 		}
 		if (generation !== this.discoveryGeneration) return
 		for (const provider of this.selectorProviders) {
@@ -284,9 +286,6 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				? String(this.selectorCounts.get(provider.key))
 				: ''
 		}
-		values.aux_send = values.aux_outputs ?? ''
-		values.group_send = values.group_outputs ?? ''
-		values.matrix_send = values.matrix_outputs ?? ''
 		this.setVariableValues(values)
 	}
 
