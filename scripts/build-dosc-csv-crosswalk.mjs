@@ -2,12 +2,10 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const moduleCsvPath = resolve(process.argv[2] ?? 'digico_osc.csv')
-const parsedFiles = process.argv.slice(3).length > 0
-	? process.argv.slice(3).map((path) => resolve(path))
-	: [
-		resolve('docs/IPAD_Q3.DOSC.parsed.csv'),
-		resolve('docs/IPADV2sd8-9-11-12.dosc.parsed.csv'),
-	]
+const parsedFiles =
+	process.argv.slice(3).length > 0
+		? process.argv.slice(3).map((path) => resolve(path))
+		: [resolve('docs/IPAD_Q3.DOSC.parsed.csv'), resolve('docs/IPADV2sd8-9-11-12.dosc.parsed.csv')]
 const outputPath = resolve('docs/dosc_csv_crosswalk.csv')
 
 function parseCsv(text) {
@@ -46,10 +44,18 @@ function parseCsv(text) {
 }
 
 function serializeCsv(rows) {
-	return rows.map((row) => row.map((value) => {
-		const text = String(value ?? '')
-		return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-	}).join(',')).join('\n') + '\n'
+	return (
+		rows
+			.map((row) =>
+				row
+					.map((value) => {
+						const text = String(value ?? '')
+						return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+					})
+					.join(','),
+			)
+			.join('\n') + '\n'
+	)
 }
 
 function normalizedPart(value) {
@@ -86,9 +92,17 @@ function rangeComparison(record, command) {
 }
 
 function explicitPaths(extensionText) {
-	return extensionText.split(' | ').map((text) => text.trim())
+	return extensionText
+		.split(' | ')
+		.map((text) => text.trim())
 		.filter((text) => text.includes('/') && !/^\/+$/u.test(text))
-		.map((text) => text.replace(/\/$/u, '').replace(/\/?\?$/u, '').split('/').filter(Boolean))
+		.map((text) =>
+			text
+				.replace(/\/$/u, '')
+				.replace(/\/?\?$/u, '')
+				.split('/')
+				.filter(Boolean),
+		)
 }
 
 const moduleRows = parseCsv(readFileSync(moduleCsvPath, 'utf8').replace(/^\uFEFF/u, ''))
@@ -98,11 +112,27 @@ const commandRows = moduleRows.map((row) => ({
 	pathLabel: normalizedLabel(row.osc_path.split('/').filter(Boolean).at(-1) ?? ''),
 }))
 
-const output = [[
-	'source_file', 'record', 'label_occurrence', 'label_occurrences', 'previous_record_label', 'label', 'next_record_label',
-	'type_code', 'type_hint', 'min_value', 'max_value', 'extension_text', 'raw_header_hex',
-	'match_status', 'candidate_count', 'candidates', 'review_notes',
-]]
+const output = [
+	[
+		'source_file',
+		'record',
+		'label_occurrence',
+		'label_occurrences',
+		'previous_record_label',
+		'label',
+		'next_record_label',
+		'type_code',
+		'type_hint',
+		'min_value',
+		'max_value',
+		'extension_text',
+		'raw_header_hex',
+		'match_status',
+		'candidate_count',
+		'candidates',
+		'review_notes',
+	],
+]
 
 for (const parsedFile of parsedFiles) {
 	const doscRows = parseCsv(readFileSync(parsedFile, 'utf8').replace(/^\uFEFF/u, ''))
@@ -122,10 +152,9 @@ for (const parsedFile of parsedFiles) {
 		const candidates = new Map()
 
 		for (const command of commandRows) {
-			const labelMatch = command.pathLabel === labelKey || (
-				labelParts.length > 1 &&
-				command.pathParts.slice(-labelParts.length).join('/') === labelParts.join('/')
-			)
+			const labelMatch =
+				command.pathLabel === labelKey ||
+				(labelParts.length > 1 && command.pathParts.slice(-labelParts.length).join('/') === labelParts.join('/'))
 			const pathMatch = embeddedPaths.some((pathParts) => {
 				return command.pathParts.slice(-pathParts.length).join('/') === pathParts.join('/')
 			})
@@ -149,33 +178,57 @@ for (const parsedFile of parsedFiles) {
 			})
 		}
 
-		const candidateList = [...candidates.values()].sort((a, b) => Number(b.pathMatch) - Number(a.pathMatch) || a.path.localeCompare(b.path))
+		const candidateList = [...candidates.values()].sort(
+			(a, b) => Number(b.pathMatch) - Number(a.pathMatch) || a.path.localeCompare(b.path),
+		)
 		const directCount = candidateList.filter((candidate) => candidate.pathMatch).length
-		const status = directCount > 0
-			? directCount === 1 ? 'embedded_path_match' : 'embedded_path_ambiguous'
-			: candidateList.length === 1 ? 'unique_label_candidate'
-				: candidateList.length > 1 ? 'ambiguous_label_candidates' : 'unmatched'
-		const formattedCandidates = candidateList.map((candidate) => {
-			const range = candidate.min === '' && candidate.max === '' ? 'no range' : `${candidate.min || '?'}..${candidate.max || '?'}`
-			const units = candidate.units ? ` ${candidate.units}` : ''
-			return `${candidate.path} [${candidate.dataType}; ${range}${units}; ${candidate.notes}]`
-		}).join(' || ')
-		const reviewNotes = status === 'embedded_path_match'
-			? 'Strongest match signal; verify before copying values.'
-			: status === 'unique_label_candidate'
-				? 'Only one path has this label, but section context is not decoded.'
-				: status === 'ambiguous_label_candidates'
-					? 'Choose the matching path using console section/context.'
-					: status === 'embedded_path_ambiguous'
-						? 'Embedded path text maps to multiple rows; review candidate details.'
-						: 'No candidate path found by label or embedded path text.'
+		const status =
+			directCount > 0
+				? directCount === 1
+					? 'embedded_path_match'
+					: 'embedded_path_ambiguous'
+				: candidateList.length === 1
+					? 'unique_label_candidate'
+					: candidateList.length > 1
+						? 'ambiguous_label_candidates'
+						: 'unmatched'
+		const formattedCandidates = candidateList
+			.map((candidate) => {
+				const range =
+					candidate.min === '' && candidate.max === '' ? 'no range' : `${candidate.min || '?'}..${candidate.max || '?'}`
+				const units = candidate.units ? ` ${candidate.units}` : ''
+				return `${candidate.path} [${candidate.dataType}; ${range}${units}; ${candidate.notes}]`
+			})
+			.join(' || ')
+		const reviewNotes =
+			status === 'embedded_path_match'
+				? 'Strongest match signal; verify before copying values.'
+				: status === 'unique_label_candidate'
+					? 'Only one path has this label, but section context is not decoded.'
+					: status === 'ambiguous_label_candidates'
+						? 'Choose the matching path using console section/context.'
+						: status === 'embedded_path_ambiguous'
+							? 'Embedded path text maps to multiple rows; review candidate details.'
+							: 'No candidate path found by label or embedded path text.'
 
 		output.push([
-			parsedFile.split('/').at(-1), record.record, labelOccurrence, labelCounts.get(labelKey),
-			doscRows[recordIndex - 1]?.label ?? '', record.label, doscRows[recordIndex + 1]?.label ?? '',
-			record.type_code, record.type_hint,
-			record.min_value, record.max_value, record.extension_text, record.raw_header_hex,
-			status, candidateList.length, formattedCandidates, reviewNotes,
+			parsedFile.split('/').at(-1),
+			record.record,
+			labelOccurrence,
+			labelCounts.get(labelKey),
+			doscRows[recordIndex - 1]?.label ?? '',
+			record.label,
+			doscRows[recordIndex + 1]?.label ?? '',
+			record.type_code,
+			record.type_hint,
+			record.min_value,
+			record.max_value,
+			record.extension_text,
+			record.raw_header_hex,
+			status,
+			candidateList.length,
+			formattedCandidates,
+			reviewNotes,
 		])
 	}
 }

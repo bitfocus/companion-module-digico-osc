@@ -45,10 +45,18 @@ function parseCsv(text) {
 }
 
 function serializeCsv(rows) {
-	return rows.map((row) => row.map((value) => {
-		const text = String(value ?? '')
-		return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-	}).join(',')).join('\n') + '\n'
+	return (
+		rows
+			.map((row) =>
+				row
+					.map((value) => {
+						const text = String(value ?? '')
+						return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+					})
+					.join(','),
+			)
+			.join('\n') + '\n'
+	)
 }
 
 function typeCompatible(typeCode, dataType) {
@@ -83,9 +91,9 @@ const moduleCsv = parseCsv(readFileSync(moduleCsvPath, 'utf8').replace(/^\uFEFF/
 const doscCsv = parseCsv(readFileSync(doscCsvPath, 'utf8').replace(/^\uFEFF/u, '')).rows
 const crosswalkCsv = parseCsv(readFileSync(crosswalkPath, 'utf8').replace(/^\uFEFF/u, '')).rows
 const rowsByPath = new Map(moduleCsv.rows.map((row) => [row.osc_path, row]))
-const crosswalkByLabel = new Map(crosswalkCsv
-	.filter((row) => row.source_file === 'IPAD_Q3.DOSC.parsed.csv')
-	.map((row) => [row.record, row]))
+const crosswalkByLabel = new Map(
+	crosswalkCsv.filter((row) => row.source_file === 'IPAD_Q3.DOSC.parsed.csv').map((row) => [row.record, row]),
+)
 const recordsByLabel = new Map()
 for (const record of doscCsv) {
 	const records = recordsByLabel.get(record.label) ?? []
@@ -93,10 +101,20 @@ for (const record of doscCsv) {
 	recordsByLabel.set(record.label, records)
 }
 
-const audit = [[
-	'csv_path', 'dosc_label', 'dosc_records', 'match_basis', 'old_min', 'new_min', 'old_max', 'new_max',
-	'old_units', 'new_units',
-]]
+const audit = [
+	[
+		'csv_path',
+		'dosc_label',
+		'dosc_records',
+		'match_basis',
+		'old_min',
+		'new_min',
+		'old_max',
+		'new_max',
+		'old_units',
+		'new_units',
+	],
+]
 const changedPaths = new Set()
 
 for (const [label, records] of recordsByLabel) {
@@ -104,7 +122,16 @@ for (const [label, records] of recordsByLabel) {
 	const first = records[0]
 	if (!['0', '1'].includes(first.type_code)) continue
 	if (records.length !== Number(first.record ? crosswalkByLabel.get(first.record)?.label_occurrences : 0)) continue
-	if (records.some((record) => record.type_code !== first.type_code || record.min_value !== first.min_value || record.max_value !== first.max_value || record.extension_text !== first.extension_text)) continue
+	if (
+		records.some(
+			(record) =>
+				record.type_code !== first.type_code ||
+				record.min_value !== first.min_value ||
+				record.max_value !== first.max_value ||
+				record.extension_text !== first.extension_text,
+		)
+	)
+		continue
 	if (first.min_value === '0' && first.max_value === '0') continue
 
 	const crosswalkRecord = crosswalkByLabel.get(first.record)
@@ -121,8 +148,12 @@ for (const [label, records] of recordsByLabel) {
 	const unit = normalizedUnit(first.extension_text)
 	const minValue = first.min_value === '' ? undefined : Number(first.min_value) * (unit?.scale ?? 1)
 	const maxValue = first.max_value === '' ? undefined : Number(first.max_value) * (unit?.scale ?? 1)
-	if ((minValue !== undefined && !Number.isFinite(minValue)) || (maxValue !== undefined && !Number.isFinite(maxValue))) continue
-	const matchBasis = records.length === 1 ? 'unique type-compatible candidate' : 'label occurrence count equals type-compatible candidates'
+	if ((minValue !== undefined && !Number.isFinite(minValue)) || (maxValue !== undefined && !Number.isFinite(maxValue)))
+		continue
+	const matchBasis =
+		records.length === 1
+			? 'unique type-compatible candidate'
+			: 'label occurrence count equals type-compatible candidates'
 
 	for (const path of compatiblePaths) {
 		const row = rowsByPath.get(path)
@@ -133,13 +164,25 @@ for (const [label, records] of recordsByLabel) {
 		if (old.min === row.osc_min && old.max === row.osc_max && old.units === row.units) continue
 		changedPaths.add(path)
 		audit.push([
-			path, label, recordIndexes.join(';'), matchBasis,
-			old.min, row.osc_min, old.max, row.osc_max, old.units, row.units,
+			path,
+			label,
+			recordIndexes.join(';'),
+			matchBasis,
+			old.min,
+			row.osc_min,
+			old.max,
+			row.osc_max,
+			old.units,
+			row.units,
 		])
 	}
 }
 
-writeFileSync(moduleCsvPath, serializeCsv([moduleCsv.header, ...moduleCsv.rows.map((row) => moduleCsv.header.map((key) => row[key] ?? ''))]), 'utf8')
+writeFileSync(
+	moduleCsvPath,
+	serializeCsv([moduleCsv.header, ...moduleCsv.rows.map((row) => moduleCsv.header.map((key) => row[key] ?? ''))]),
+	'utf8',
+)
 writeFileSync(auditPath, serializeCsv(audit), 'utf8')
 console.log(`Module rows updated: ${changedPaths.size}`)
 console.log(`Updated values logged: ${audit.length - 1}`)

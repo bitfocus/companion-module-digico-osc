@@ -56,13 +56,13 @@ export function commandNameFromPath(path: string): string {
 	const segments = path.split('/').filter((segment) => segment && segment !== '*')
 	if (segments.length === 0) return '[DiGiCo] Command'
 	const [category, ...name] = segments
-	return `[${formatWords(category!)}] ${name.map(formatWords).join('/') || formatWords(category!)}`
+	return `[${formatWords(category)}] ${name.map(formatWords).join('/') || formatWords(category)}`
 }
 
 function csvPath(name: string): string {
 	const moduleDir = dirname(fileURLToPath(import.meta.url))
 	const paths = [resolve(moduleDir, name), resolve(moduleDir, `../${name}`)]
-	return paths.find((path) => existsSync(path)) ?? paths[0]!
+	return paths.find((path) => existsSync(path)) ?? paths[0]
 }
 
 export function loadCommandTable(): CommandRow[] {
@@ -72,17 +72,32 @@ export function loadCommandTable(): CommandRow[] {
 
 	return ['digico_osc.csv', 'digico_entities.csv'].flatMap((filename) => {
 		const file = csvPath(filename)
-		const lines = readFileSync(file, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean)
+		const lines = readFileSync(file, 'utf8')
+			.replace(/^\uFEFF/, '')
+			.split(/\r?\n/)
+			.filter(Boolean)
 		if (lines.length < 2) throw new Error(`DiGiCo OSC command table is empty: ${file}`)
-		const headers = parseCsvLine(lines[0]!)
-		const columns = Object.fromEntries([...required, 'action_schema', 'feedback_schema', 'refresh_entity', 'value_selector_label', 'learn_schema'].map((name) => {
-			const index = headers.indexOf(name)
-			if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
-			return [name, index]
-		})) as Record<(typeof required)[number] | 'action_schema' | 'feedback_schema' | 'refresh_entity' | 'value_selector_label' | 'learn_schema', number>
+		const headers = parseCsvLine(lines[0])
+		const columns = Object.fromEntries(
+			[...required, 'action_schema', 'feedback_schema', 'refresh_entity', 'value_selector_label', 'learn_schema'].map(
+				(name) => {
+					const index = headers.indexOf(name)
+					if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
+					return [name, index]
+				},
+			),
+		) as Record<
+			| (typeof required)[number]
+			| 'action_schema'
+			| 'feedback_schema'
+			| 'refresh_entity'
+			| 'value_selector_label'
+			| 'learn_schema',
+			number
+		>
 		return lines.slice(1).map((line, index) => {
 			const values = parseCsvLine(line)
-			const get = (column: keyof typeof columns) => columns[column] < 0 ? '' : values[columns[column]] ?? ''
+			const get = (column: keyof typeof columns) => (columns[column] < 0 ? '' : (values[columns[column]] ?? ''))
 			const oscPath = get('osc_path').trim()
 			if (!oscPath) throw new Error(`Missing OSC path in ${file}, row ${index + 2}`)
 			const scale = Number(get('Scale'))
@@ -137,7 +152,7 @@ export function getPathAxisSegment(path: string, axis: number): string | undefin
 	const segments = path.split('/').filter(Boolean)
 	let currentAxis = 0
 	for (let index = 0; index < segments.length; index++) {
-		if (!segments[index]!.includes('*')) continue
+		if (!segments[index].includes('*')) continue
 		if (currentAxis++ === axis) return segments[index - 1]
 	}
 	return undefined
@@ -147,7 +162,7 @@ export function getPathAxisLabel(path: string, axis: number): string {
 	const segment = getPathAxisSegment(path, axis)
 	if (!segment) return `Path ${axis + 1}`
 	const words = formatWords(segment).split(' ')
-	const final = words.at(-1) ?? ''
+	const final = words[words.length - 1] ?? ''
 	if (final.endsWith('ies')) words[words.length - 1] = `${final.slice(0, -3)}y`
 	else if (final.endsWith('s') && !/(ss|us|is)$/i.test(final)) words[words.length - 1] = final.slice(0, -1)
 	return words.join(' ')

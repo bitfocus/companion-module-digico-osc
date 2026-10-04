@@ -26,7 +26,7 @@ export class IncomingActionRecorder {
 
 			const options: Record<string, JsonValue> = {}
 			for (let axis = 0; axis < getPathParameterCount(row.oscPath); axis++) {
-				let index = Number(match[axis + 1])
+				const index = Number(match[axis + 1])
 				if (!Number.isInteger(index)) continue
 				options[`index_${axis + 1}`] = [index]
 			}

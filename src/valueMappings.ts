@@ -9,7 +9,7 @@ type ValueMapping = Partial<Record<ValueMappingUse, MappingValues>> & { values?:
 const valueMappings = valueMappingsJson as Record<string, ValueMapping>
 
 function pathValueKey(row: CommandRow): string {
-	return row.oscPath.split('/').filter(Boolean).at(-1)?.toLowerCase() ?? ''
+	return row.oscPath.split('/').filter(Boolean).pop()?.toLowerCase() ?? ''
 }
 
 export function getValueMappingKey(row: CommandRow): string | undefined {

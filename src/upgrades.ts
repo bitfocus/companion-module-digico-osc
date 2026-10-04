@@ -2,6 +2,7 @@ import type {
 	CompanionMigrationAction,
 	CompanionMigrationFeedback,
 	CompanionStaticUpgradeProps,
+	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
 	CompanionUpgradeContext,
 } from '@companion-module/base'
@@ -99,7 +100,7 @@ function migrateFeedback(feedback: CompanionMigrationFeedback): CompanionMigrati
 function upgradeLegacyDiGiCoControls(
 	_context: CompanionUpgradeContext<ModuleConfig>,
 	props: CompanionStaticUpgradeProps<ModuleConfig, undefined>,
-) {
+): CompanionStaticUpgradeResult<ModuleConfig, undefined> {
 	const updatedActions = props.actions.flatMap((action) => {
 		const updated = migrateAction(action)
 		if (updated) {

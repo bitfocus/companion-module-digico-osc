@@ -11,21 +11,21 @@ export type SelectorProvider = {
 /** Build selector sources from the command paths that return item names. */
 export function deriveSelectorProviders(rows: CommandRow[]): SelectorProvider[] {
 	const namePaths = new Set(
-		rows
-			.map((row) => row.oscPath)
-			.filter((path) => path.includes('*') && path.endsWith('/name')),
+		rows.map((row) => row.oscPath).filter((path) => path.includes('*') && path.endsWith('/name')),
 	)
 
 	return [...namePaths].flatMap((namePath) => {
 		const section = namePath.split('/').filter(Boolean)[0]
 		if (!section) return []
-		return [{
-			key: section.toLowerCase(),
-			section,
-			countPath: `/Console/${section}`,
-			namePath,
-			maxCount: 512,
-		}]
+		return [
+			{
+				key: section.toLowerCase(),
+				section,
+				countPath: `/Console/${section}`,
+				namePath,
+				maxCount: 512,
+			},
+		]
 	})
 }
 

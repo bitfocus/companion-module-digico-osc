@@ -28,7 +28,7 @@ export type ActionOptions = CompanionOptionValues
 export type ActionsSchema = Record<string, { options: ActionOptions }>
 
 function optionIndexes(value: unknown, choices: Array<{ id: number | string }>, fallback = 1): number[] {
-	const valid = choices.flatMap((choice) => typeof choice.id === 'number' ? [choice.id] : [])
+	const valid = choices.flatMap((choice) => (typeof choice.id === 'number' ? [choice.id] : []))
 	const selected = Array.isArray(value) ? value : value === undefined || value === null ? [] : [value]
 	if (selected.includes('all')) return valid.length ? valid : [fallback]
 	const indexes = [...new Set(selected.map(Number).filter((index) => Number.isInteger(index) && valid.includes(index)))]
@@ -53,8 +53,14 @@ function selectedPaths(
 }
 
 function valueLabel(row: CommandRow): string {
-	const label = row.name.split('/').at(-1) || 'Value'
+	const label = row.name.split('/').pop() || 'Value'
 	return row.units ? `${label} (${row.units})` : label
+}
+
+function stringValue(value: unknown, fallback = ''): string {
+	if (typeof value === 'string') return value
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value)
+	return fallback
 }
 
 function numberFromWire(row: CommandRow, value: number): number {
@@ -68,7 +74,7 @@ function numberToWire(row: CommandRow, value: number): number {
 function wireArguments(row: CommandRow, value: unknown): OSCSomeArguments {
 	const type = oscDataType(row.dataType)
 	if (!type) return []
-	if (type === 'String') return [{ type: 's', value: String(value ?? '') }]
+	if (type === 'String') return [{ type: 's', value: stringValue(value) }]
 	const number = numberToWire(row, Number(value ?? 0))
 	return type === 'Int' ? [{ type: 'i', value: Math.trunc(number) }] : [{ type: 'f', value: number }]
 }
@@ -172,14 +178,18 @@ type PresetOptionSet = {
 
 function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: CommandRow[]): PresetOptionSet {
 	const sections = self.getPresetSections()
-	const options: SomeCompanionActionInputField[] = [{
-		id: 'section',
-		type: 'dropdown',
-		label: 'Section',
-		choices: sections.length ? sections.map((section) => ({ id: section, label: section })) : [{ id: '', label: 'No presets found' }],
-		default: sections[0] ?? '',
-		disableAutoExpression: true,
-	}]
+	const options: SomeCompanionActionInputField[] = [
+		{
+			id: 'section',
+			type: 'dropdown',
+			label: 'Section',
+			choices: sections.length
+				? sections.map((section) => ({ id: section, label: section }))
+				: [{ id: '', label: 'No presets found' }],
+			default: sections[0] ?? '',
+			disableAutoExpression: true,
+		},
+	]
 	const sectionIds = new Map<string, { item?: string; target?: string; group?: string }>()
 	const schema = row.actionSchema || 'presetItem'
 	for (const [sectionIndex, section] of sections.entries()) {
@@ -200,9 +210,8 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 		} else if (row.oscPath.includes('*')) {
 			const item = `index_1_${sectionIndex}`
 			ids.item = item
-			const choices = schema === 'presetGroup'
-				? self.getPresetGroupRenameChoices(section)
-				: self.getPresetChoicesForSection(section)
+			const choices =
+				schema === 'presetGroup' ? self.getPresetGroupRenameChoices(section) : self.getPresetChoicesForSection(section)
 			options.push({
 				id: item,
 				type: 'dropdown',
@@ -216,7 +225,8 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 			const target = `target_${sectionIndex}`
 			ids.target = target
 			const choices = self.getPresetTargetChoices(section)
-			const targetChoices = schema === 'presetRecall' || schema === 'presetCreate' ? [{ id: 'all', label: 'All' }, ...choices] : choices
+			const targetChoices =
+				schema === 'presetRecall' || schema === 'presetCreate' ? [{ id: 'all', label: 'All' }, ...choices] : choices
 			if (schema === 'presetUpdate') {
 				options.push({
 					id: target,
@@ -256,7 +266,8 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 	if (schema === 'presetRecall') {
 		const scopeRow = rows.find((candidate) => candidate.oscPath === '/Presets/Recall_Scope')
 		const choices = scopeRow ? getMappedChoices(scopeRow) : undefined
-		if (choices?.length) options.push({ id: 'scope', type: 'dropdown', label: 'Scope', choices, default: choices[0]!.id })
+		if (choices?.length)
+			options.push({ id: 'scope', type: 'dropdown', label: 'Scope', choices, default: choices[0].id })
 	}
 	if (schema === 'presetCreate') options.push({ id: 'value', type: 'textinput', label: 'Name', default: '' })
 	else if (!['presetRecall', 'presetUpdate'].includes(schema)) {
@@ -278,11 +289,11 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 			? [{ path: valueSelectorPath, axis: 0 }]
 			: Array.from({ length: getPathParameterCount(row.oscPath) }, (_, axis) => ({ path: row.oscPath, axis }))
 		const selectorChoices = selectorDefinitions.map(({ path, axis }) =>
-			root && hasEntityRoot(root)
-				? self.getEntityChoices(root)
-				: self.getParameterChoices(path, axis),
+			root && hasEntityRoot(root) ? self.getEntityChoices(root) : self.getParameterChoices(path, axis),
 		)
-		const options = presetFields?.options ?? actionOptions(self, row, valueSelectorPath ?? row.oscPath, selectorDefinitions, selectorChoices)
+		const options =
+			presetFields?.options ??
+			actionOptions(self, row, valueSelectorPath ?? row.oscPath, selectorDefinitions, selectorChoices)
 		const wireType = oscDataType(row.dataType)
 		const booleanValue = isBooleanDataType(row.dataType) || (row.dataType === 'Int' && row.min === 0 && row.max === 1)
 		const id = row.oscPath
@@ -290,56 +301,64 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 			name: row.name,
 			description: row.description,
 			options,
-			...(isReadable(row) && !isNoArgs(row) && row.actionSchema !== 'presetUpdate' ? {
-				learn: async (event: CompanionActionEvent<ActionOptions>) => {
-					let selectedIndex: number | undefined
-					if (presetFields) {
-						const section = String(event.options.section ?? self.getPresetSections()[0] ?? '')
-						const sectionOption = presetFields.sectionIds.get(section)
-						if (!sectionOption) return {}
-						selectedIndex = sectionOption.item
-							? Number(event.options[sectionOption.item] ?? self.getPresetChoicesForSection(section)[0]?.id)
-							: undefined
-					} else if (getPathParameterCount(row.oscPath)) {
-						selectedIndex = Number(event.options.index_1 ?? selectorChoices[0]?.[0]?.id)
+			...(isReadable(row) && !isNoArgs(row) && row.actionSchema !== 'presetUpdate'
+				? {
+						learn: async (event: CompanionActionEvent<ActionOptions>) => {
+							let selectedIndex: number | undefined
+							if (presetFields) {
+								const section = stringValue(event.options.section, self.getPresetSections()[0] ?? '')
+								const sectionOption = presetFields.sectionIds.get(section)
+								if (!sectionOption) return {}
+								selectedIndex = sectionOption.item
+									? Number(event.options[sectionOption.item] ?? self.getPresetChoicesForSection(section)[0]?.id)
+									: undefined
+							} else if (getPathParameterCount(row.oscPath)) {
+								selectedIndex = Number(event.options.index_1 ?? selectorChoices[0]?.[0]?.id)
+							}
+							if (row.learnSchema && selectedIndex !== undefined) {
+								const entityRoot = row.oscPath.split('/').filter(Boolean)[0]
+								const record = await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, selectedIndex)
+								const field =
+									record && typeof record === 'object' && !Array.isArray(record)
+										? (record as Record<string, unknown>)[row.learnSchema]
+										: undefined
+								return typeof field === 'number'
+									? { value: numberFromWire(row, field) }
+									: typeof field === 'string'
+										? { value: field }
+										: {}
+							}
+							if (row.feedbackSchema === 'indexedRecord' && selectedIndex !== undefined) {
+								const record = await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)
+								const valueKey = getPathAxisSegment(row.oscPath, getPathParameterCount(row.oscPath) - 1)
+								const value =
+									record && typeof record === 'object' && !Array.isArray(record) && valueKey
+										? (record as Record<string, unknown>)[valueKey]
+										: undefined
+								return typeof value === 'number'
+									? { value: numberFromWire(row, value) }
+									: typeof value === 'string'
+										? { value }
+										: {}
+							}
+							const paths = selectedPaths(row.oscPath, event.options, selectorChoices)
+							if (valueSelectorPath) {
+								const value = await self.getOscValueOrQuery(row.oscPath)
+								if (!Array.isArray(value)) return {}
+								const indexes = optionIndexes(event.options.index_1, selectorChoices[0])
+								const selected = value[indexes[0] - 1]
+								return typeof selected === 'number' ? { value: numberFromWire(row, selected) } : {}
+							}
+							const value = await self.getOscValueOrQuery(paths[0])
+							if (typeof value === 'number') return { value: numberFromWire(row, value) }
+							if (typeof value === 'string') return { value }
+							return {}
+						},
 					}
-					if (row.learnSchema && selectedIndex !== undefined) {
-						const entityRoot = row.oscPath.split('/').filter(Boolean)[0]
-						const record = await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, selectedIndex)
-						const field = record && typeof record === 'object' && !Array.isArray(record)
-							? (record as Record<string, unknown>)[row.learnSchema]
-							: undefined
-						return typeof field === 'number' ? { value: numberFromWire(row, field) }
-							: typeof field === 'string' ? { value: field }
-							: {}
-					}
-					if (row.feedbackSchema === 'indexedRecord' && selectedIndex !== undefined) {
-						const record = await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)
-						const valueKey = getPathAxisSegment(row.oscPath, getPathParameterCount(row.oscPath) - 1)
-						const value = record && typeof record === 'object' && !Array.isArray(record) && valueKey
-							? (record as Record<string, unknown>)[valueKey]
-							: undefined
-						return typeof value === 'number' ? { value: numberFromWire(row, value) }
-							: typeof value === 'string' ? { value }
-							: {}
-					}
-					const paths = selectedPaths(row.oscPath, event.options, selectorChoices)
-					if (valueSelectorPath) {
-						const value = await self.getOscValueOrQuery(row.oscPath)
-						if (!Array.isArray(value)) return {}
-						const indexes = optionIndexes(event.options.index_1, selectorChoices[0]!)
-						const selected = value[indexes[0]! - 1]
-						return typeof selected === 'number' ? { value: numberFromWire(row, selected) } : {}
-					}
-					const value = await self.getOscValueOrQuery(paths[0]!)
-					if (typeof value === 'number') return { value: numberFromWire(row, value) }
-					if (typeof value === 'string') return { value }
-					return {}
-				},
-			} : {}),
+				: {}),
 			callback: async (event: CompanionActionEvent<ActionOptions>) => {
 				if (presetFields) {
-					const section = String(event.options.section ?? self.getPresetSections()[0] ?? '')
+					const section = stringValue(event.options.section, self.getPresetSections()[0] ?? '')
 					const sectionOption = presetFields.sectionIds.get(section)
 					if (!sectionOption) return
 					if (row.actionSchema === 'presetRecall') {
@@ -347,9 +366,14 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 						const presetIndex = Number(event.options[sectionOption.item!] ?? presets[0]?.id)
 						if (!presets.some((choice) => choice.id === presetIndex)) return
 						const targets = self.getPresetTargetChoices(section)
-						const targetIndexes = optionIndexes(event.options[sectionOption.target!], [{ id: 'all' }, ...targets], targets[0]?.id ?? 1)
+						const targetIndexes = optionIndexes(
+							event.options[sectionOption.target!],
+							[{ id: 'all' }, ...targets],
+							targets[0]?.id ?? 1,
+						)
 						self.send_osc('/Presets/Recall_Scope', [{ type: 'i', value: Math.trunc(Number(event.options.scope ?? 0)) }])
-						for (const target of targetIndexes) self.send_osc(`/Presets/Recall_Preset/${presetIndex}`, [{ type: 's', value: `/${section}/${target}` }])
+						for (const target of targetIndexes)
+							self.send_osc(`/Presets/Recall_Preset/${presetIndex}`, [{ type: 's', value: `/${section}/${target}` }])
 						return
 					}
 					if (row.actionSchema === 'presetUpdate') {
@@ -358,20 +382,29 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 						const targets = self.getPresetTargetChoices(section)
 						const target = Number(event.options[sectionOption.target!] ?? targets[0]?.id)
 						if (presets.some((choice) => choice.id === presetIndex) && targets.some((choice) => choice.id === target)) {
-							self.send_osc(`/Presets/Update_Preset/${presetIndex}`, [{ type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` }])
+							self.send_osc(`/Presets/Update_Preset/${presetIndex}`, [
+								{ type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` },
+							])
 						}
 						return
 					}
 					if (row.actionSchema === 'presetCreate') {
 						const targets = self.getPresetTargetChoices(section)
-						const targetIndexes = optionIndexes(event.options[sectionOption.target!], [{ id: 'all' }, ...targets], targets[0]?.id ?? 1)
-						const group = String(event.options[sectionOption.group!] ?? '')
-						const name = String(event.options.value ?? '').trim()
+						const targetIndexes = optionIndexes(
+							event.options[sectionOption.target!],
+							[{ id: 'all' }, ...targets],
+							targets[0]?.id ?? 1,
+						)
+						const group = stringValue(event.options[sectionOption.group!])
+						const name = stringValue(event.options.value).trim()
 						for (const target of targetIndexes) {
 							const previous = new Set(self.getEntityIndexes('Presets'))
 							const refreshed = self.waitForEntityRefresh('Presets')
-							self.send_osc(row.oscPath, [{ type: 's', value: group }, { type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` }])
-							if (!await refreshed) continue
+							self.send_osc(row.oscPath, [
+								{ type: 's', value: group },
+								{ type: 's', value: `/${self.getPresetTargetSection(section)}/${target}` },
+							])
+							if (!(await refreshed)) continue
 							const created = self.getEntityIndexes('Presets').find((index) => !previous.has(index))
 							if (created !== undefined && name) {
 								self.send_osc(`/Presets/Rename_Preset/${created}`, [{ type: 's', value: name }])
@@ -397,45 +430,60 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 						logger.warn(`Cannot set ${row.oscPath}: current value array is unavailable`)
 						return
 					}
-					const indexes = optionIndexes(event.options.index_1, selectorChoices[0]!)
+					const indexes = optionIndexes(event.options.index_1, selectorChoices[0])
 					const updated = current.map(Number)
-					for (const index of indexes) if (index > 0 && index <= updated.length) updated[index - 1] = Number(event.options.value ?? row.min ?? 0)
-					self.send_osc(row.oscPath, updated.map((value) => ({ type: 'i' as const, value })))
+					for (const index of indexes)
+						if (index > 0 && index <= updated.length) updated[index - 1] = Number(event.options.value ?? row.min ?? 0)
+					self.send_osc(
+						row.oscPath,
+						updated.map((value) => ({ type: 'i' as const, value })),
+					)
 					return
 				}
 				const value = event.options.value
 				if (booleanValue && Number(value) === 2) {
-					await Promise.all(paths.map(async (path) => {
-						const current = await self.getOscValueOrQuery(path)
-						if (typeof current !== 'number' || (current !== 0 && current !== 1)) {
-							logger.warn(`Cannot toggle ${path}: current boolean value is unavailable`)
-							return
-						}
-						self.send_osc(path, wireArguments(row, current === 0 ? 1 : 0))
-					}))
+					await Promise.all(
+						paths.map(async (path) => {
+							const current = await self.getOscValueOrQuery(path)
+							if (typeof current !== 'number' || (current !== 0 && current !== 1)) {
+								logger.warn(`Cannot toggle ${path}: current boolean value is unavailable`)
+								return
+							}
+							self.send_osc(path, wireArguments(row, current === 0 ? 1 : 0))
+						}),
+					)
 					return
 				}
-				if ((event.options.relative === true || event.options.crossfade === true) && wireType && wireType !== 'String') {
+				if (
+					(event.options.relative === true || event.options.crossfade === true) &&
+					wireType &&
+					wireType !== 'String'
+				) {
 					const duration = Math.min(60000, Math.max(1, Number(event.options.crossfade_duration ?? 1000)))
-					await Promise.all(paths.map(async (path) => {
-						const raw = await self.getOscValueOrQuery(path)
-						if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-							logger.warn(`Cannot ramp ${path}: current numeric value is unavailable`)
-							return
-						}
-						const current = numberFromWire(row, raw)
-						const entered = Number(value ?? 0)
-						const target = event.options.relative === true ? current + entered : entered
-						if (event.options.crossfade !== true) {
-							self.send_osc(path, wireArguments(row, target))
-							return
-						}
-						const steps = Math.max(1, Math.ceil(duration / 50))
-						for (let step = 1; step <= steps; step++) {
-							self.send_osc(path, wireArguments(row, step === steps ? target : interpolate(row, current, target, step / steps)))
-							if (step < steps) await new Promise<void>((resolve) => setTimeout(resolve, duration / steps))
-						}
-					}))
+					await Promise.all(
+						paths.map(async (path) => {
+							const raw = await self.getOscValueOrQuery(path)
+							if (typeof raw !== 'number' || !Number.isFinite(raw)) {
+								logger.warn(`Cannot ramp ${path}: current numeric value is unavailable`)
+								return
+							}
+							const current = numberFromWire(row, raw)
+							const entered = Number(value ?? 0)
+							const target = event.options.relative === true ? current + entered : entered
+							if (event.options.crossfade !== true) {
+								self.send_osc(path, wireArguments(row, target))
+								return
+							}
+							const steps = Math.max(1, Math.ceil(duration / 50))
+							for (let step = 1; step <= steps; step++) {
+								self.send_osc(
+									path,
+									wireArguments(row, step === steps ? target : interpolate(row, current, target, step / steps)),
+								)
+								if (step < steps) await new Promise<void>((resolve) => setTimeout(resolve, duration / steps))
+							}
+						}),
+					)
 					return
 				}
 				const args = wireArguments(row, value)

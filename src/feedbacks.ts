@@ -31,20 +31,22 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 				name: row.name,
 				description: row.description,
 				type: 'value',
-				options: [{
-					id: 'index',
-					type: 'dropdown',
-					label: 'Snapshot',
-					choices: choices.length ? choices : [{ id: 0, label: 'No snapshots found' }],
-					default: choices[0]?.id ?? 0,
-				}],
+				options: [
+					{
+						id: 'index',
+						type: 'dropdown',
+						label: 'Snapshot',
+						choices: choices.length ? choices : [{ id: 0, label: 'No snapshots found' }],
+						default: choices[0]?.id ?? 0,
+					},
+				],
 				unsubscribe: (feedback) => self.releaseFeedbackValue(feedback.id),
 				callback: async (feedback: CompanionFeedbackValueEvent<FeedbackOptions>) => {
 					const index = Math.trunc(Number(feedback.options.index ?? 0))
 					self.watchFeedbackValue(feedback.id, row.oscPath)
 					const value = await self.getOscValueOrQuery(row.oscPath, undefined, index)
 					return value && typeof value === 'object' && !Array.isArray(value)
-						? (value as { note?: JsonValue }).note ?? null
+						? ((value as { note?: JsonValue }).note ?? null)
 						: null
 				},
 			}
@@ -56,18 +58,20 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 				name: row.name,
 				description: row.description,
 				type: 'value',
-				options: [{
-					id: 'index',
-					type: 'dropdown',
-					label: entityRoot.slice(0, -1),
-					choices: choices.length ? choices : [{ id: 0, label: `No ${entityRoot.toLowerCase()} found` }],
-					default: choices[0]?.id ?? 0,
-				}],
+				options: [
+					{
+						id: 'index',
+						type: 'dropdown',
+						label: entityRoot.slice(0, -1),
+						choices: choices.length ? choices : [{ id: 0, label: `No ${entityRoot.toLowerCase()} found` }],
+						default: choices[0]?.id ?? 0,
+					},
+				],
 				unsubscribe: (feedback) => self.releaseFeedbackValue(feedback.id),
 				callback: async (feedback: CompanionFeedbackValueEvent<FeedbackOptions>) => {
 					const index = Math.trunc(Number(feedback.options.index ?? 0))
 					self.watchFeedbackValue(feedback.id, row.oscPath)
-					return await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, index) ?? null
+					return (await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, index)) ?? null
 				},
 			}
 			continue
@@ -78,49 +82,55 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 		const selectorEntityRoot = selectorPath.split('/').filter(Boolean)[0]
 		const hasEntitySelector = !!selectorEntityRoot && hasEntityRoot(selectorEntityRoot)
 		const selectorChoices = Array.from({ length: selectorCount }, (_, axis) =>
-			hasEntitySelector ? self.getEntityChoices(selectorEntityRoot!) : self.getParameterChoices(selectorPath, valueSelectorPath ? 0 : axis),
+			hasEntitySelector
+				? self.getEntityChoices(selectorEntityRoot)
+				: self.getParameterChoices(selectorPath, valueSelectorPath ? 0 : axis),
 		)
-		const entitySections = hasEntitySelector ? self.getEntitySections(selectorEntityRoot!) : []
+		const entitySections = hasEntitySelector ? self.getEntitySections(selectorEntityRoot) : []
 		const sectionedSelector = selectorCount === 1 && entitySections.length > 0
-		const options: SomeCompanionFeedbackInputField[] = sectionedSelector ? [{
-			id: 'section',
-			type: 'dropdown',
-			label: 'Section',
-			choices: entitySections.map((section) => ({ id: section, label: section })),
-			default: entitySections[0]!,
-			disableAutoExpression: true,
-		}] : selectorChoices.map((choices, axis) => {
-			const label = getPathAxisLabel(selectorPath, valueSelectorPath ? 0 : axis)
-			if (valueSelectorPath) {
-				return {
-					id: `index_${axis + 1}`,
-					type: 'multidropdown',
-					label,
-					choices,
-					default: [1],
-					sortSelection: true,
-				}
-			}
-			if (hasEntitySelector) {
-				return {
-					id: `index_${axis + 1}`,
-					type: 'dropdown',
-					label: selectorEntityRoot!.slice(0, -1),
-					choices: choices.length ? choices : [{ id: 0, label: `No ${selectorEntityRoot!.toLowerCase()} found` }],
-					default: choices[0]?.id ?? 0,
-				}
-			}
-			return {
-				id: `index_${axis + 1}`,
-				type: 'dropdown',
-				label,
-				choices: choices.filter((choice) => choice.id !== 'all'),
-				default: 1,
-			}
-		})
+		const options: SomeCompanionFeedbackInputField[] = sectionedSelector
+			? [
+					{
+						id: 'section',
+						type: 'dropdown',
+						label: 'Section',
+						choices: entitySections.map((section) => ({ id: section, label: section })),
+						default: entitySections[0],
+						disableAutoExpression: true,
+					},
+				]
+			: selectorChoices.map((choices, axis) => {
+					const label = getPathAxisLabel(selectorPath, valueSelectorPath ? 0 : axis)
+					if (valueSelectorPath) {
+						return {
+							id: `index_${axis + 1}`,
+							type: 'multidropdown',
+							label,
+							choices,
+							default: [1],
+							sortSelection: true,
+						}
+					}
+					if (hasEntitySelector) {
+						return {
+							id: `index_${axis + 1}`,
+							type: 'dropdown',
+							label: selectorEntityRoot.slice(0, -1),
+							choices: choices.length ? choices : [{ id: 0, label: `No ${selectorEntityRoot.toLowerCase()} found` }],
+							default: choices[0]?.id ?? 0,
+						}
+					}
+					return {
+						id: `index_${axis + 1}`,
+						type: 'dropdown',
+						label,
+						choices: choices.filter((choice) => choice.id !== 'all'),
+						default: 1,
+					}
+				})
 		if (sectionedSelector) {
 			entitySections.forEach((section, sectionIndex) => {
-				const choices = self.getEntityChoices(selectorEntityRoot!, section)
+				const choices = self.getEntityChoices(selectorEntityRoot, section)
 				options.push({
 					id: `index_1_${sectionIndex}`,
 					type: 'dropdown',
@@ -142,26 +152,35 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 					self.watchFeedbackValue(feedback.id, row.oscPath)
 					const values = await self.getOscValueOrQuery(row.oscPath)
 					if (!Array.isArray(values)) return null
-					const choices = selectorChoices[0]!
+					const choices = selectorChoices[0]
 					const selected = feedback.options.index_1
-					const indexes = Array.isArray(selected) ? selected : selected === undefined || selected === null ? [] : [selected]
-					const available = choices.flatMap((choice) => typeof choice.id === 'number' ? [choice.id] : [])
+					const indexes = Array.isArray(selected)
+						? selected
+						: selected === undefined || selected === null
+							? []
+							: [selected]
+					const available = choices.flatMap((choice) => (typeof choice.id === 'number' ? [choice.id] : []))
 					const selectedIndexes = indexes.includes('all')
 						? available
 						: [...new Set(indexes.map(Number).filter((index) => Number.isInteger(index) && available.includes(index)))]
 					return selectedIndexes.map((index) => scaledFeedback(row, values[index - 1] ?? null))
 				}
+				const selectedSection = feedback.options.section
+				const section = typeof selectedSection === 'string' ? selectedSection : entitySections[0]
 				const indexes = Array.from({ length: selectorCount }, (_, axis) =>
-					Number(sectionedSelector
-						? feedback.options[`index_${axis + 1}_${Math.max(0, entitySections.indexOf(String(feedback.options.section ?? entitySections[0])))}`] ?? 0
-						: feedback.options[`index_${axis + 1}`] ?? 1),
+					Number(
+						sectionedSelector
+							? (feedback.options[`index_${axis + 1}_${Math.max(0, entitySections.indexOf(section ?? ''))}`] ?? 0)
+							: (feedback.options[`index_${axis + 1}`] ?? 1),
+					),
 				)
 				const path = materializePath(row.oscPath, indexes)
 				self.watchFeedbackValue(feedback.id, path)
-				const selectedIndex = indexes.at(-1) ?? 0
-				const value = row.feedbackSchema === 'indexedRecord'
-					? await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex) ?? null
-					: await self.getOscValueOrQuery(path) ?? null
+				const selectedIndex = indexes[indexes.length - 1] ?? 0
+				const value =
+					row.feedbackSchema === 'indexedRecord'
+						? ((await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)) ?? null)
+						: ((await self.getOscValueOrQuery(path)) ?? null)
 				return scaledFeedback(row, value)
 			},
 		}

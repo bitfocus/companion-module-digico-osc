@@ -20,9 +20,12 @@ export function parseEntityRecord(path: string, args: OSCValue[]): EntityRecord 
 		if (!key || (typeof raw !== 'number' && typeof raw !== 'string')) return undefined
 		const scale = scaleText === undefined ? 1 : Number(scaleText)
 		if (!Number.isFinite(scale) || scale === 0) return undefined
-		value[key] = typeof raw === 'number' && decimalsText !== undefined
-			? (raw / scale).toFixed(Number(decimalsText))
-			: typeof raw === 'number' ? raw / scale : raw
+		value[key] =
+			typeof raw === 'number' && decimalsText !== undefined
+				? (raw / scale).toFixed(Number(decimalsText))
+				: typeof raw === 'number'
+					? raw / scale
+					: raw
 	}
 	const index = value.index
 	return typeof index === 'number' && Number.isInteger(index) ? { schemaPath, index, value } : undefined
@@ -33,7 +36,7 @@ export function entitySchemaPaths(): string[] {
 }
 
 export function entityRoots(): string[] {
-	return [...new Set(entitySchemaPaths().map((path) => path.split('/').filter(Boolean)[0]!))]
+	return [...new Set(entitySchemaPaths().map((path) => path.split('/').filter(Boolean)[0]))]
 }
 
 export function hasEntityRoot(root: string): boolean {

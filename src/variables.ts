@@ -14,9 +14,7 @@ export const PARAMETER_MAXIMUMS = {
 
 export const MODULE_VARIABLES = {
 	...PARAMETER_MAXIMUMS,
-	...Object.fromEntries(entityRoots().map((root) => [
-		`${root.toLowerCase()}_count`, `${root} count`,
-	])),
+	...Object.fromEntries(entityRoots().map((root) => [`${root.toLowerCase()}_count`, `${root} count`])),
 	filename: 'Filename',
 } as const
 

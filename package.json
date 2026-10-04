@@ -9,8 +9,8 @@
 		"package": "run build && companion-module-build",
 		"package:dev": "run package --dev",
 		"build": "rimraf dist && run build:main",
-		"build:main": "tsc -p tsconfig.build.json",
-		"dev": "tsc -p tsconfig.build.json --watch",
+		"build:main": "tsc6 -p tsconfig.build.json",
+		"dev": "tsc6 -p tsconfig.build.json --watch",
 		"lint:raw": "eslint",
 		"lint": "run lint:raw ."
 	},
@@ -29,7 +29,6 @@
 	"devDependencies": {
 		"@companion-module/tools": "^3.1.0",
 		"@types/node": "^26.6.0",
-		"@typescript/native": "npm:typescript@^7.0.2",
 		"eslint": "^10.11.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^17.6.0",

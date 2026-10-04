@@ -16,12 +16,18 @@ export class IpadRelay {
 	private bound = false
 	private stopped = false
 
-	constructor(instance: ModuleInstance, private readonly config: ModuleConfig) {
+	constructor(
+		instance: ModuleInstance,
+		private readonly config: ModuleConfig,
+	) {
 		this.socket = instance.createSharedUdpSocket('udp4', (packet, remote) => {
 			if (this.stopped) return
 			const hasLoggedMessages = this.logPacket('iPad -> module', packet)
 			this.socket.send(packet, this.config.transmitPort, this.config.ip)
-			if (hasLoggedMessages) logger.debug(`Forwarded ${packet.length} byte(s) from ${remote.address}:${remote.port} to console ${this.config.ip}:${this.config.transmitPort}`)
+			if (hasLoggedMessages)
+				logger.debug(
+					`Forwarded ${packet.length} byte(s) from ${remote.address}:${remote.port} to console ${this.config.ip}:${this.config.transmitPort}`,
+				)
 		})
 		this.socketReady = new Promise<void>((resolve) => {
 			this.socket.once('listening', () => resolve())
@@ -43,7 +49,8 @@ export class IpadRelay {
 		if (this.stopped || !this.listening) return
 		const hasLoggedMessages = this.logPacket('console -> iPad', packet)
 		this.socket.send(packet, this.config.ipadTransmitPort, this.config.ipadIp)
-		if (hasLoggedMessages) logger.debug(`Forwarded ${packet.length} byte(s) to iPad ${this.config.ipadIp}:${this.config.ipadTransmitPort}`)
+		if (hasLoggedMessages)
+			logger.debug(`Forwarded ${packet.length} byte(s) to iPad ${this.config.ipadIp}:${this.config.ipadTransmitPort}`)
 	}
 
 	public async destroy(): Promise<void> {
@@ -77,5 +84,4 @@ export class IpadRelay {
 			return true
 		}
 	}
-
 }

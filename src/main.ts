@@ -28,7 +28,7 @@ export type ModuleSchema = {
 }
 
 const logger = createModuleLogger('main')
-const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+const delay = async (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 function truncateFloat(value: OSCValue): OSCValue {
 	return typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value * 1_000_000) / 1_000_000 : value
@@ -53,7 +53,9 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	private readonly pendingValueReads = new Map<string, Promise<JsonValue | undefined>>()
 	private readonly entityRefreshes = new Map<string, Promise<void>>()
 	private readonly entityRefreshWaiters = new Map<string, Array<() => void>>()
-	private readonly actionRecorder = new IncomingActionRecorder((action, uniqueId) => this.recordAction(action, uniqueId))
+	private readonly actionRecorder = new IncomingActionRecorder((action, uniqueId) =>
+		this.recordAction(action, uniqueId),
+	)
 	private discoveryGeneration = 0
 	private definitionsTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -100,7 +102,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		return this.ipadRelay?.shouldSuppressFilenameReply(path) ?? false
 	}
 
-	public async getOscValueOrQuery(path: string, timeoutMs = OSC_QUERY_TIMEOUT_MS, queryIndex?: number): Promise<JsonValue | undefined> {
+	public async getOscValueOrQuery(
+		path: string,
+		timeoutMs = OSC_QUERY_TIMEOUT_MS,
+		queryIndex?: number,
+	): Promise<JsonValue | undefined> {
 		const cacheKey = queryIndex === undefined ? path : `${path}|${queryIndex}`
 		if (this.dataStore.has(cacheKey)) return this.dataStore.get(cacheKey)
 		if (!this.mixer) return undefined
@@ -144,7 +150,10 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 		const label = getPathAxisLabel(path, axis)
 		const indexes = [...choicesByIndex]
-			.filter((index) => index >= 1 && (provider ? index <= (this.selectorCounts.get(provider.key) ?? provider.maxCount) : true))
+			.filter(
+				(index) =>
+					index >= 1 && (provider ? index <= (this.selectorCounts.get(provider.key) ?? provider.maxCount) : true),
+			)
 			.sort((left, right) => left - right)
 		return [
 			{ id: 'all', label: 'All' },
@@ -157,9 +166,12 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		if (!records) return []
 		return [...records.values()]
 			.filter((record) => section === undefined || String(record.section ?? '').trim() === section.trim())
-			.sort((left, right) => root === 'Presets'
-				? String(left.group ?? '').localeCompare(String(right.group ?? '')) || Number(left.index) - Number(right.index)
-				: Number(left.index) - Number(right.index))
+			.sort((left, right) =>
+				root === 'Presets'
+					? String(left.group ?? '').localeCompare(String(right.group ?? '')) ||
+						Number(left.index) - Number(right.index)
+					: Number(left.index) - Number(right.index),
+			)
 			.map((record) => {
 				const index = Number(record.index)
 				const name = String(record.name ?? `${root.slice(0, -1)} ${index}`)
@@ -171,17 +183,22 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 					record.num === undefined ? '' : `[${record.num}]`,
 					record.section === undefined ? '' : `[${record.section}]`,
 					record.group ? `${record.group}/` : '',
-				].filter(Boolean).join(' ')
+				]
+					.filter(Boolean)
+					.join(' ')
 				const label = `${index}: ${details ? `${details} ` : ''}${name}`
 				return { id: index, label }
 			})
 	}
 
 	public getEntitySections(root: string): string[] {
-		return [...new Set([...(this.entityRecords.get(root)?.values() ?? [])]
-			.map((record) => String(record.section ?? '').trim())
-			.filter(Boolean))]
-			.sort((left, right) => left.localeCompare(right))
+		return [
+			...new Set(
+				[...(this.entityRecords.get(root)?.values() ?? [])]
+					.map((record) => String(record.section ?? '').trim())
+					.filter(Boolean),
+			),
+		].sort((left, right) => left.localeCompare(right))
 	}
 
 	public getPresetSections(): string[] {
@@ -208,9 +225,15 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	public getPresetTargetChoices(section: string): Array<{ id: number; label: string }> {
 		const provider = this.presetTargetProvider(section)
 		const targetCount = entityTargetCount(section)
-		if (targetCount !== undefined) return Array.from({ length: targetCount }, (_, index) => ({ id: index + 1, label: `${index + 1}: ${section} ${index + 1}` }))
+		if (targetCount !== undefined)
+			return Array.from({ length: targetCount }, (_, index) => ({
+				id: index + 1,
+				label: `${index + 1}: ${section} ${index + 1}`,
+			}))
 		return provider
-			? this.getParameterChoices(provider.namePath, 0).filter((choice): choice is { id: number; label: string } => typeof choice.id === 'number')
+			? this.getParameterChoices(provider.namePath, 0).filter(
+					(choice): choice is { id: number; label: string } => typeof choice.id === 'number',
+				)
 			: []
 	}
 
@@ -219,7 +242,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	private presetTargetProvider(section: string): SelectorProvider | undefined {
-		const key = section.trim().replace(/[\s-]+/g, '_').replace(/_Mix$/i, '_Outputs').toLowerCase()
+		const key = section
+			.trim()
+			.replace(/[\s-]+/g, '_')
+			.replace(/_Mix$/i, '_Outputs')
+			.toLowerCase()
 		return this.selectorProviders.find((entry) => entry.key === key)
 	}
 
@@ -241,17 +268,19 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			const index = Number(record.index)
 			if (!previous || index < previous.index) groups.set(group, { index, group })
 		}
-		return [...groups.values()].sort((a, b) => a.group.localeCompare(b.group)).map(({ index, group }) => ({
-			id: index,
-			label: group || '(No Group)',
-		}))
+		return [...groups.values()]
+			.sort((a, b) => a.group.localeCompare(b.group))
+			.map(({ index, group }) => ({
+				id: index,
+				label: group || '(No Group)',
+			}))
 	}
 
 	public getEntityIndexes(root: string): number[] {
 		return [...(this.entityRecords.get(root)?.keys() ?? [])]
 	}
 
-	public refreshEntityList(root: string): Promise<void> {
+	public async refreshEntityList(root: string): Promise<void> {
 		const current = this.entityRefreshes.get(root)
 		if (current) return current
 		const refresh = this.loadEntityList(root).finally(() => {
@@ -263,7 +292,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		return refresh
 	}
 
-	public waitForEntityRefresh(root: string, timeoutMs = 3000): Promise<boolean> {
+	public async waitForEntityRefresh(root: string, timeoutMs = 3000): Promise<boolean> {
 		return new Promise((resolve) => {
 			let finished = false
 			const finish = (refreshed: boolean): void => {
@@ -278,7 +307,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			this.entityRefreshWaiters.set(root, waiters)
 			const timeout = setTimeout(() => {
 				const current = this.entityRefreshWaiters.get(root)
-				if (current) this.entityRefreshWaiters.set(root, current.filter((waiter) => waiter !== onRefresh))
+				if (current)
+					this.entityRefreshWaiters.set(
+						root,
+						current.filter((waiter) => waiter !== onRefresh),
+					)
 				finish(false)
 			}, timeoutMs)
 		})
@@ -298,7 +331,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		if (total > 0) {
 			await this.mixer.queryOsc(`/${root}/names`, undefined, 1000)
 			const deadline = Date.now() + 2000
-			while (generation === this.discoveryGeneration && (this.entityRecords.get(root)?.size ?? 0) < total && Date.now() < deadline) {
+			while (
+				generation === this.discoveryGeneration &&
+				(this.entityRecords.get(root)?.size ?? 0) < total &&
+				Date.now() < deadline
+			) {
 				await delay(25)
 			}
 		}
@@ -323,7 +360,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		const suppressLog = this.shouldSuppressIpadFilenameReply(path)
 		const incoming = args.map(truncateFloat)
 		const record = parseEntityRecord(path, incoming)
-		const root = record ? record.schemaPath.split('/').filter(Boolean)[0]! : undefined
+		const root = record ? record.schemaPath.split('/').filter(Boolean)[0] : undefined
 		if (record && root && record.schemaPath === `/${root}/name`) {
 			let records = this.entityRecords.get(root)
 			if (!records) this.entityRecords.set(root, (records = new Map()))
@@ -333,9 +370,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			if (!records) this.indexedRecords.set(record.schemaPath, (records = new Map()))
 			records.set(record.index, record.value)
 		}
-		const cachedValue: JsonValue = record?.value ?? (incoming.length === 0 || path.endsWith('/modes') || incoming.length > 1
-			? incoming.map(safeOscValue)
-			: safeOscValue(incoming[0]!))
+		const cachedValue: JsonValue =
+			record?.value ??
+			(incoming.length === 0 || path.endsWith('/modes') || incoming.length > 1
+				? incoming.map(safeOscValue)
+				: safeOscValue(incoming[0]))
 		const previous = this.dataStore.get(path)
 		this.dataStore.set(path, cachedValue)
 		if (record) this.dataStore.set(`${record.schemaPath}|${record.index}`, record.value)
@@ -343,22 +382,26 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		if (path === '/Console/Session/Filename' && typeof cachedValue === 'string') {
 			this.setVariableValues({ filename: cachedValue })
 		}
-		if (path.endsWith('/name') && JSON.stringify(previous) !== JSON.stringify(cachedValue)) this.scheduleDefinitionRefresh()
+		if (path.endsWith('/name') && JSON.stringify(previous) !== JSON.stringify(cachedValue))
+			this.scheduleDefinitionRefresh()
 		const changed = JSON.stringify(previous) !== JSON.stringify(cachedValue)
 		const feedbackIds = [...this.feedbackPaths]
 			.filter(([, watchedPath]) => watchedPath === path)
 			.map(([feedbackId]) => feedbackId)
 		if (changed && feedbackIds.length) this.checkFeedbacksById(...feedbackIds)
 		if (!isQueryReply) {
-			for (const root of new Set(this.commandRows
-				.filter((row) => row.refreshEntity && pathMatcher(row.oscPath).test(path))
-				.map((row) => row.refreshEntity))) {
+			for (const root of new Set(
+				this.commandRows
+					.filter((row) => row.refreshEntity && pathMatcher(row.oscPath).test(path))
+					.map((row) => row.refreshEntity),
+			)) {
 				void this.refreshEntityList(root)
 			}
 		}
 		this.actionRecorder.record(path, incoming, this.commandRows)
 		const provider = this.selectorProviders.find((entry) => entry.countPath === path)
-		if (provider && typeof cachedValue === 'number') this.selectorCounts.set(provider.key, Math.max(0, Math.min(provider.maxCount, Math.trunc(cachedValue))))
+		if (provider && typeof cachedValue === 'number')
+			this.selectorCounts.set(provider.key, Math.max(0, Math.min(provider.maxCount, Math.trunc(cachedValue))))
 	}
 
 	public updateActions(): void {
@@ -382,7 +425,9 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 					logger.error(`Unable to start iPad OSC relay: ${String(error)}`)
 				}
 			} else if (this.config.ipadEnabled) {
-				logger.error(`iPad receive port ${this.config.ipadReceivePort} must differ from console receive port ${this.config.receivePort}`)
+				logger.error(
+					`iPad receive port ${this.config.ipadReceivePort} must differ from console receive port ${this.config.receivePort}`,
+				)
 			}
 			this.mixer = createMixer(this, this.config)
 			this.updateStatus(InstanceStatus.Ok)
@@ -395,24 +440,29 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	private async discoverSelectors(generation: number): Promise<void> {
-		void this.getOscValueOrQuery('/Console/Session/Filename').catch((error) => logger.debug(`Unable to query session filename: ${String(error)}`))
+		void this.getOscValueOrQuery('/Console/Session/Filename').catch((error) =>
+			logger.debug(`Unable to query session filename: ${String(error)}`),
+		)
 		if (this.mixer) {
 			await this.mixer.queryOsc('/Console/Channels', undefined, 500)
 			await delay(50)
 			const consoleName = await this.getOscValueOrQuery('/Console/Name')
-			logger.info(`Startup query /Console/Name: ${consoleName === undefined ? 'no reply' : JSON.stringify(consoleName)}`)
+			logger.info(
+				`Startup query /Console/Name: ${consoleName === undefined ? 'no reply' : JSON.stringify(consoleName)}`,
+			)
 			this.send_osc('/Console/Session/!', [])
 		}
 		if (generation !== this.discoveryGeneration) return
 		for (const provider of this.selectorProviders) {
 			const reported = this.dataStore.get(provider.countPath)
-			const count = typeof reported === 'number'
-				? Math.max(0, Math.min(provider.maxCount, Math.trunc(reported)))
-				: await this.discoverCount(provider.namePath, provider.maxCount, generation)
+			const count =
+				typeof reported === 'number'
+					? Math.max(0, Math.min(provider.maxCount, Math.trunc(reported)))
+					: await this.discoverCount(provider.namePath, provider.maxCount, generation)
 			this.selectorCounts.set(provider.key, count)
 			if (typeof reported === 'number') {
 				const namePaths = Array.from({ length: count }, (_, index) => provider.namePath.replace('*', String(index + 1)))
-				await Promise.all(namePaths.map((path) => this.getOscValueOrQuery(path)))
+				await Promise.all(namePaths.map(async (path) => this.getOscValueOrQuery(path)))
 			}
 			if (generation !== this.discoveryGeneration) return
 		}

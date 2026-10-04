@@ -6,7 +6,11 @@ const output = resolve(process.argv[3] ?? `${input}.parsed.csv`)
 const bytes = readFileSync(input)
 
 const headerLength = bytes.readUInt16LE(0)
-const header = bytes.subarray(2, 2 + headerLength).toString('utf8').replace(/\0+$/, '').trim()
+const header = bytes
+	.subarray(2, 2 + headerLength)
+	.toString('utf8')
+	.replace(/\0+$/, '')
+	.trim()
 const entries = []
 
 for (let offset = 0; offset + 3 < bytes.length; offset++) {
@@ -49,7 +53,7 @@ const rows = entries.map((entry, index) => {
 	const min = core.readFloatLE(11)
 	const max = core.readFloatLE(15)
 	const typeCode = core[10]
-	const typeHint = ({ 0: 'Discrete (integer/enum)', 1: 'Float', 3: 'Meter', 4: 'String' })[typeCode] ?? 'Unknown'
+	const typeHint = { 0: 'Discrete (integer/enum)', 1: 'Float', 3: 'Meter', 4: 'String' }[typeCode] ?? 'Unknown'
 	return [
 		index + 1,
 		entry.label,
@@ -63,7 +67,17 @@ const rows = entries.map((entry, index) => {
 	]
 })
 
-const columns = ['record', 'label', 'type_code', 'type_hint', 'min_value', 'max_value', 'extension_text', 'raw_header_hex', 'extension_bytes']
+const columns = [
+	'record',
+	'label',
+	'type_code',
+	'type_hint',
+	'min_value',
+	'max_value',
+	'extension_text',
+	'raw_header_hex',
+	'extension_bytes',
+]
 writeFileSync(output, [columns, ...rows].map((row) => row.map(csvCell).join(',')).join('\n') + '\n')
 
 const declaredCount = Number(header.match(/(\d+)\s*$/)?.[1])
@@ -78,6 +92,8 @@ console.log(`Header: ${header}`)
 console.log(`Header-declared command count: ${Number.isFinite(declaredCount) ? declaredCount : 'not found'}`)
 console.log(`Decoded labeled records: ${entries.length}`)
 console.log(`Distinct labels: ${labels.size}`)
-console.log(`Type code counts: ${JSON.stringify(Object.fromEntries([...new Set(rows.map((row) => row[2]))].map((code) => [code, rows.filter((row) => row[2] === code).length])))}`)
+console.log(
+	`Type code counts: ${JSON.stringify(Object.fromEntries([...new Set(rows.map((row) => row[2]))].map((code) => [code, rows.filter((row) => row[2] === code).length])))}`,
+)
 console.log(`CSV written: ${output}`)
 console.log(`Extension text found: ${[...textRuns.keys()].join(', ') || '(none)'}`)

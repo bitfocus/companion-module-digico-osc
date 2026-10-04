@@ -19,7 +19,7 @@ type PendingQuery = {
 	timeoutMs: number
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+const sleep = async (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 function encodeOscQuery(path: string, index?: number): Buffer {
 	const encodePaddedString = (value: string): Buffer => {
@@ -88,7 +88,7 @@ export class digico {
 		if (!this.stopped) this.sendQueue.push({ path, args })
 	}
 
-	public queryOsc(path: string, index?: number, timeoutMs = OSC_QUERY_TIMEOUT_MS): Promise<boolean> {
+	public async queryOsc(path: string, index?: number, timeoutMs = OSC_QUERY_TIMEOUT_MS): Promise<boolean> {
 		return new Promise((resolve) => {
 			if (this.stopped) {
 				resolve(false)
