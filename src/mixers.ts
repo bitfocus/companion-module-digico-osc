@@ -146,7 +146,8 @@ export class digico {
 			try {
 				if (message.query) {
 					const queryPath = message.path.replace(/\/?\?$/, '')
-					logger.debug(`-> ${this.config.ip}:${this.config.transmitPort} ${queryPath}/?`)
+					const queryIndex = message.queryIndex === undefined ? '' : ` [index ${message.queryIndex}]`
+					logger.debug(`-> ${this.config.ip}:${this.config.transmitPort} ${queryPath}/?${queryIndex}`)
 					this.activeQueryPath = queryPath
 					this.trackPendingQuery(
 						queryPath,
@@ -176,13 +177,13 @@ export class digico {
 			}
 			try {
 				for (const message of decodeOscPacket(packet)) {
-					const isQueryReply = this.clearPendingQueries(message.path, message.args.length > 0)
+					this.clearPendingQueries(message.path, message.args.length > 0)
 					const typedArgs = message.args.map((value, index) => ({ type: message.typeTags[index] ?? '?', value }))
 					const encodingNote = message.encoding === 'untagged-meter-float' ? ' (DiGiCo untagged meter float)' : ''
 					if (!this.instance.shouldSuppressIpadFilenameReply(message.path)) {
 						logger.debug(`<- ${message.path} ${JSON.stringify(typedArgs)}${encodingNote}`)
 					}
-					this.instance.onOscMessage(message.path, message.args, isQueryReply)
+					this.instance.onOscMessage(message.path, message.args)
 				}
 			} catch (error) {
 				const preview = packet.subarray(0, 128)
@@ -205,9 +206,8 @@ export class digico {
 		this.pendingQueries.set(path, { timeout, resolve, timeoutMs })
 	}
 
-	private clearPendingQueries(responsePath: string, hasValue: boolean): boolean {
-		if (!hasValue) return false
-		let isQueryReply = false
+	private clearPendingQueries(responsePath: string, hasValue: boolean): void {
+		if (!hasValue) return
 		for (const queryPath of this.pendingQueries.keys()) {
 			if (
 				responsePath === queryPath ||
@@ -215,11 +215,9 @@ export class digico {
 				(queryPath.endsWith('/names') && responsePath === `${queryPath.slice(0, -6)}/name`) ||
 				(queryPath === '/Console/Channels' && responsePath.startsWith('/Console/'))
 			) {
-				isQueryReply = true
 				this.finishPendingQuery(queryPath, true)
 			}
 		}
-		return isQueryReply
 	}
 
 	private finishPendingQuery(path: string, received: boolean, logTimeout = true): void {

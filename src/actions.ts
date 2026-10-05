@@ -11,6 +11,7 @@ import type { CommandRow } from './commandTable.js'
 import {
 	getPathAxisLabel,
 	getPathAxisSegment,
+	getPathEndpoint,
 	getPathParameterCount,
 	isBooleanDataType,
 	isNoArgs,
@@ -20,12 +21,16 @@ import {
 	oscDataType,
 } from './commandTable.js'
 import { getMappedChoices, getValueSelectorPath } from './valueMappings.js'
-import { hasEntityRoot } from './entityRecords.js'
+import { getEntityRecordDefinition, hasEntityRoot } from './entityRecords.js'
 
 const logger = createModuleLogger('action')
 
 export type ActionOptions = CompanionOptionValues
 export type ActionsSchema = Record<string, { options: ActionOptions }>
+
+function actionEndpoint(row: CommandRow): string {
+	return getPathEndpoint(row.oscPath)
+}
 
 function optionIndexes(value: unknown, choices: Array<{ id: number | string }>, fallback = 1): number[] {
 	const valid = choices.flatMap((choice) => (typeof choice.id === 'number' ? [choice.id] : []))
@@ -191,11 +196,11 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 		},
 	]
 	const sectionIds = new Map<string, { item?: string; target?: string; group?: string }>()
-	const schema = row.actionSchema || 'presetItem'
+	const schema = actionEndpoint(row)
 	for (const [sectionIndex, section] of sections.entries()) {
 		const visible = `$(options:section) == ${JSON.stringify(section)}`
 		const ids: { item?: string; target?: string; group?: string } = {}
-		if (schema === 'presetRecall' || schema === 'presetUpdate') {
+		if (schema === 'Recall_Preset' || schema === 'Update_Preset') {
 			const item = `preset_${sectionIndex}`
 			ids.item = item
 			const choices = self.getPresetChoicesForSection(section)
@@ -211,23 +216,25 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 			const item = `index_1_${sectionIndex}`
 			ids.item = item
 			const choices =
-				schema === 'presetGroup' ? self.getPresetGroupRenameChoices(section) : self.getPresetChoicesForSection(section)
+				schema === 'Rename_Preset_Group'
+					? self.getPresetGroupRenameChoices(section)
+					: self.getPresetChoicesForSection(section)
 			options.push({
 				id: item,
 				type: 'dropdown',
-				label: schema === 'presetGroup' ? 'Group' : 'Preset',
+				label: schema === 'Rename_Preset_Group' ? 'Group' : 'Preset',
 				choices: choices.length ? choices : [{ id: 0, label: 'No items in this section' }],
 				default: choices[0]?.id ?? 0,
 				isVisibleExpression: visible,
 			})
 		}
-		if (schema === 'presetRecall' || schema === 'presetUpdate' || schema === 'presetCreate') {
+		if (schema === 'Recall_Preset' || schema === 'Update_Preset' || schema === 'New_Preset') {
 			const target = `target_${sectionIndex}`
 			ids.target = target
 			const choices = self.getPresetTargetChoices(section)
 			const targetChoices =
-				schema === 'presetRecall' || schema === 'presetCreate' ? [{ id: 'all', label: 'All' }, ...choices] : choices
-			if (schema === 'presetUpdate') {
+				schema === 'Recall_Preset' || schema === 'New_Preset' ? [{ id: 'all', label: 'All' }, ...choices] : choices
+			if (schema === 'Update_Preset') {
 				options.push({
 					id: target,
 					type: 'dropdown',
@@ -248,7 +255,7 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 				})
 			}
 		}
-		if (schema === 'presetCreate') {
+		if (schema === 'New_Preset') {
 			const group = `group_${sectionIndex}`
 			ids.group = group
 			const choices = self.getPresetGroupChoices(section)
@@ -263,14 +270,14 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 		}
 		sectionIds.set(section, ids)
 	}
-	if (schema === 'presetRecall') {
+	if (schema === 'Recall_Preset') {
 		const scopeRow = rows.find((candidate) => candidate.oscPath === '/Presets/Recall_Scope')
 		const choices = scopeRow ? getMappedChoices(scopeRow) : undefined
 		if (choices?.length)
 			options.push({ id: 'scope', type: 'dropdown', label: 'Scope', choices, default: choices[0].id })
 	}
-	if (schema === 'presetCreate') options.push({ id: 'value', type: 'textinput', label: 'Name', default: '' })
-	else if (!['presetRecall', 'presetUpdate'].includes(schema)) {
+	if (schema === 'New_Preset') options.push({ id: 'value', type: 'textinput', label: 'Name', default: '' })
+	else if (!['Recall_Preset', 'Update_Preset'].includes(schema)) {
 		const valueOptions = actionOptions(self, row, row.oscPath, [])
 		if (row.dataType === 'String') for (const option of valueOptions) if (option.id === 'value') option.label = 'Name'
 		options.push(...valueOptions)
@@ -301,7 +308,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 			name: row.name,
 			description: row.description,
 			options,
-			...(isReadable(row) && !isNoArgs(row) && row.actionSchema !== 'presetUpdate'
+			...(isReadable(row) && !isNoArgs(row) && actionEndpoint(row) !== 'Update_Preset'
 				? {
 						learn: async (event: CompanionActionEvent<ActionOptions>) => {
 							let selectedIndex: number | undefined
@@ -329,7 +336,14 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 										: {}
 							}
 							if (row.feedbackSchema === 'indexedRecord' && selectedIndex !== undefined) {
-								const record = await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)
+								const recordDefinition = getEntityRecordDefinition(row.oscPath)
+								const record = recordDefinition?.queryPath
+									? await self.getIndexedRecordOrQuery(
+											recordDefinition.responsePath,
+											selectedIndex,
+											recordDefinition.queryPath,
+										)
+									: await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)
 								const valueKey = getPathAxisSegment(row.oscPath, getPathParameterCount(row.oscPath) - 1)
 								const value =
 									record && typeof record === 'object' && !Array.isArray(record) && valueKey
@@ -361,7 +375,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 					const section = stringValue(event.options.section, self.getPresetSections()[0] ?? '')
 					const sectionOption = presetFields.sectionIds.get(section)
 					if (!sectionOption) return
-					if (row.actionSchema === 'presetRecall') {
+					if (actionEndpoint(row) === 'Recall_Preset') {
 						const presets = self.getPresetChoicesForSection(section)
 						const presetIndex = Number(event.options[sectionOption.item!] ?? presets[0]?.id)
 						if (!presets.some((choice) => choice.id === presetIndex)) return
@@ -376,7 +390,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 							self.send_osc(`/Presets/Recall_Preset/${presetIndex}`, [{ type: 's', value: `/${section}/${target}` }])
 						return
 					}
-					if (row.actionSchema === 'presetUpdate') {
+					if (actionEndpoint(row) === 'Update_Preset') {
 						const presets = self.getPresetChoicesForSection(section)
 						const presetIndex = Number(event.options[sectionOption.item!] ?? presets[0]?.id)
 						const targets = self.getPresetTargetChoices(section)
@@ -388,7 +402,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 						}
 						return
 					}
-					if (row.actionSchema === 'presetCreate') {
+					if (actionEndpoint(row) === 'New_Preset') {
 						const targets = self.getPresetTargetChoices(section)
 						const targetIndexes = optionIndexes(
 							event.options[sectionOption.target!],

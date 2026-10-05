@@ -12,9 +12,7 @@ export type CommandRow = {
 	description: string
 	units: string
 	scale: number
-	actionSchema: string
 	feedbackSchema: string
-	refreshEntity: string
 	valueSelectorLabel: string
 	learnSchema: string
 }
@@ -59,6 +57,26 @@ export function commandNameFromPath(path: string): string {
 	return `[${formatWords(category)}] ${name.map(formatWords).join('/') || formatWords(category)}`
 }
 
+export function getPathEndpoint(path: string): string {
+	return (
+		path
+			.split('/')
+			.filter((segment) => segment && segment !== '*')
+			.at(-1) ?? ''
+	)
+}
+
+function valueSelectorLabelFromPath(path: string): string {
+	const endpoint = getPathEndpoint(path)
+	return endpoint.startsWith('Move_') ? `To ${formatWords(endpoint.slice('Move_'.length))}` : ''
+}
+
+function learnSchemaFromPath(path: string): string {
+	const endpoint = getPathEndpoint(path)
+	if (endpoint === 'Rename_Preset_Group') return 'group'
+	return endpoint.startsWith('Rename_') ? 'name' : ''
+}
+
 function csvPath(name: string): string {
 	const moduleDir = dirname(fileURLToPath(import.meta.url))
 	const paths = [resolve(moduleDir, name), resolve(moduleDir, `../${name}`)]
@@ -79,22 +97,12 @@ export function loadCommandTable(): CommandRow[] {
 		if (lines.length < 2) throw new Error(`DiGiCo OSC command table is empty: ${file}`)
 		const headers = parseCsvLine(lines[0])
 		const columns = Object.fromEntries(
-			[...required, 'action_schema', 'feedback_schema', 'refresh_entity', 'value_selector_label', 'learn_schema'].map(
-				(name) => {
-					const index = headers.indexOf(name)
-					if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
-					return [name, index]
-				},
-			),
-		) as Record<
-			| (typeof required)[number]
-			| 'action_schema'
-			| 'feedback_schema'
-			| 'refresh_entity'
-			| 'value_selector_label'
-			| 'learn_schema',
-			number
-		>
+			[...required, 'feedback_schema'].map((name) => {
+				const index = headers.indexOf(name)
+				if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
+				return [name, index]
+			}),
+		) as Record<(typeof required)[number] | 'feedback_schema', number>
 		return lines.slice(1).map((line, index) => {
 			const values = parseCsvLine(line)
 			const get = (column: keyof typeof columns) => (columns[column] < 0 ? '' : (values[columns[column]] ?? ''))
@@ -114,11 +122,9 @@ export function loadCommandTable(): CommandRow[] {
 				description: get('description').trim(),
 				units: get('units').trim(),
 				scale,
-				actionSchema: get('action_schema').trim(),
 				feedbackSchema: get('feedback_schema').trim(),
-				refreshEntity: get('refresh_entity').trim(),
-				valueSelectorLabel: get('value_selector_label').trim(),
-				learnSchema: get('learn_schema').trim(),
+				valueSelectorLabel: valueSelectorLabelFromPath(oscPath),
+				learnSchema: learnSchemaFromPath(oscPath),
 			}
 		})
 	})

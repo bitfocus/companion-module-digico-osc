@@ -7,9 +7,16 @@ import type {
 } from '@companion-module/base'
 import type ModuleInstance from './main.js'
 import type { CommandRow } from './commandTable.js'
-import { getPathAxisLabel, getPathParameterCount, isNoArgs, isReadable, materializePath } from './commandTable.js'
+import {
+	getPathAxisLabel,
+	getPathAxisSegment,
+	getPathParameterCount,
+	isNoArgs,
+	isReadable,
+	materializePath,
+} from './commandTable.js'
 import { getMappedValue, getValueSelectorPath } from './valueMappings.js'
-import { hasEntityRoot } from './entityRecords.js'
+import { getEntityRecordDefinition, hasEntityRoot } from './entityRecords.js'
 
 export type FeedbackOptions = CompanionOptionValues
 export type FeedbacksSchema = Record<string, { type: 'value'; options: FeedbackOptions }>
@@ -72,6 +79,41 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 					const index = Math.trunc(Number(feedback.options.index ?? 0))
 					self.watchFeedbackValue(feedback.id, row.oscPath)
 					return (await self.getOscValueOrQuery(`/${entityRoot}/name`, undefined, index)) ?? null
+				},
+			}
+			continue
+		}
+		const recordDefinition = getEntityRecordDefinition(row.oscPath)
+		if (row.feedbackSchema === 'indexedRecord' && recordDefinition?.queryPath) {
+			const choices = self.getIndexedRecordChoices(recordDefinition.responsePath)
+			feedbacks[row.oscPath] = {
+				name: row.name,
+				description: row.description,
+				type: 'value',
+				options: [
+					{
+						id: 'index_1',
+						type: 'dropdown',
+						label: getPathAxisLabel(row.oscPath, 0),
+						choices: choices.length
+							? choices
+							: [{ id: 0, label: recordDefinition.emptyChoicesLabel || `No ${entityRoot.toLowerCase()} found` }],
+						default: choices[0]?.id ?? 0,
+					},
+				],
+				unsubscribe: (feedback) => self.releaseFeedbackValue(feedback.id),
+				callback: async (feedback: CompanionFeedbackValueEvent<FeedbackOptions>) => {
+					const rawIndex = feedback.options.index_1
+					const index = Math.trunc(Number(rawIndex ?? choices[0]?.id ?? 0))
+					self.watchFeedbackValue(feedback.id, recordDefinition.responsePath)
+					const record = await self.getIndexedRecordOrQuery(
+						recordDefinition.responsePath,
+						index,
+						recordDefinition.queryPath!,
+					)
+					const valueKey = getPathAxisSegment(row.oscPath, 0)
+					const value = valueKey ? record?.[valueKey] : undefined
+					return scaledFeedback(row, value ?? null)
 				},
 			}
 			continue
@@ -176,11 +218,7 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 				)
 				const path = materializePath(row.oscPath, indexes)
 				self.watchFeedbackValue(feedback.id, path)
-				const selectedIndex = indexes[indexes.length - 1] ?? 0
-				const value =
-					row.feedbackSchema === 'indexedRecord'
-						? ((await self.getOscValueOrQuery(row.oscPath, undefined, selectedIndex)) ?? null)
-						: ((await self.getOscValueOrQuery(path)) ?? null)
+				const value = (await self.getOscValueOrQuery(path)) ?? null
 				return scaledFeedback(row, value)
 			},
 		}

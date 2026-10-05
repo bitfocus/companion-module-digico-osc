@@ -1,16 +1,43 @@
-import entitySchemas from './entity-schemas.json' with { type: 'json' }
 import type { OSCValue } from './osc.js'
 import { pathMatcher } from './commandTable.js'
+import entitySchemas from './entity-schemas.json' with { type: 'json' }
 
-const definitions = entitySchemas as { records: Record<string, string>; targetCounts: Record<string, number> }
+export type EntityRecordDefinition = {
+	responsePath: string
+	fields: string
+	queryPath?: string
+	countPath?: string
+	emptyChoicesLabel?: string
+}
 
-export type EntityRecord = { schemaPath: string; index: number; value: Record<string, number | string> }
+const definitions = entitySchemas as {
+	records: Record<string, EntityRecordDefinition>
+	targetCounts: Record<string, number>
+}
+const targetCounts = definitions.targetCounts
 
-/** Parse an entity list record using its positional schema; field names and scale come from JSON. */
+export type EntityRecord = {
+	schemaPath: string
+	index: number
+	value: Record<string, number | string>
+}
+
+export function getEntityRecordDefinition(commandPath: string): EntityRecordDefinition | undefined {
+	return definitions.records[commandPath]
+}
+
+export function entityRecordDefinitions(): EntityRecordDefinition[] {
+	return Object.values(definitions.records)
+}
+
+/** Parse a record using the positional schema declared in entity-schemas.json. */
 export function parseEntityRecord(path: string, args: OSCValue[]): EntityRecord | undefined {
-	const schemaPath = Object.keys(definitions.records).find((template) => pathMatcher(template).test(path))
-	if (!schemaPath) return undefined
-	const schema = definitions.records[schemaPath]
+	const definition = Object.values(definitions.records).find((candidate) =>
+		pathMatcher(candidate.responsePath).test(path),
+	)
+	if (!definition) return undefined
+	const schemaPath = definition.responsePath
+	const schema = definition.fields
 	const fields = schema.split(',')
 	if (fields.length !== args.length) return undefined
 	const value: Record<string, number | string> = {}
@@ -32,7 +59,7 @@ export function parseEntityRecord(path: string, args: OSCValue[]): EntityRecord 
 }
 
 export function entitySchemaPaths(): string[] {
-	return Object.keys(definitions.records)
+	return [...new Set(Object.values(definitions.records).map((definition) => definition.responsePath))]
 }
 
 export function entityRoots(): string[] {
@@ -40,13 +67,13 @@ export function entityRoots(): string[] {
 }
 
 export function hasEntityRoot(root: string): boolean {
-	return Object.keys(definitions.records).some((path) => path.startsWith(`/${root}/`))
+	return entitySchemaPaths().some((path) => path.startsWith(`/${root}/`))
 }
 
 export function entityTargetCount(section: string): number | undefined {
-	return definitions.targetCounts[section]
+	return targetCounts[section]
 }
 
 export function entityTargetSections(): string[] {
-	return Object.keys(definitions.targetCounts)
+	return Object.keys(targetCounts)
 }
