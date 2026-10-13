@@ -61,6 +61,11 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		this.recordAction(action, uniqueId),
 	)
 	private discoveryGeneration = 0
+	/** When we last sent each value ourselves, so a late echo can't drag it backwards. */
+	private readonly localSetAt = new Map<string, number>()
+	private lastSeen = 0
+	private consoleOnline = false
+	private heartbeatTimer: ReturnType<typeof setInterval> | undefined
 	private definitionsTimer: ReturnType<typeof setTimeout> | undefined
 
 	constructor(internal: unknown) {
@@ -96,6 +101,24 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	public send_osc(path: string, args: OSCSomeArguments): void {
 		this.mixer?.sendOsc(path, args)
+		// Remember what we sent. Toggles and relative steps read the cache, and with
+		// "Suppress OSC Retransmit" on the console never echoes our own changes back.
+		const list = (Array.isArray(args) ? args : [args]) as Array<{ type?: string; value?: unknown } | undefined>
+		const first = list[0]
+		if (list.length === 1 && (first?.type === 'f' || first?.type === 'i') && typeof first.value === 'number') {
+			this.localSetAt.set(path, Date.now())
+			this.storeValue(path, truncateFloat(first.value) as number)
+		}
+	}
+
+	private storeValue(path: string, value: JsonValue): void {
+		const previous = this.dataStore.get(path)
+		this.dataStore.set(path, value)
+		if (JSON.stringify(previous) === JSON.stringify(value)) return
+		const feedbackIds = [...this.feedbackPaths]
+			.filter(([, watchedPath]) => watchedPath === path)
+			.map(([feedbackId]) => feedbackId)
+		if (feedbackIds.length) this.checkFeedbacksById(...feedbackIds)
 	}
 
 	public forwardConsoleOscPacket(packet: Buffer): void {
@@ -116,7 +139,12 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		if (!this.mixer) return undefined
 		const existing = this.pendingValueReads.get(cacheKey)
 		if (existing) return existing
-		const request = this.mixer.queryOsc(path, queryIndex, timeoutMs).then(() => this.dataStore.get(cacheKey))
+		const mixer = this.mixer
+		const request = mixer.queryOsc(path, queryIndex, timeoutMs).then(async () => {
+			if (this.dataStore.has(cacheKey)) return this.dataStore.get(cacheKey)
+			await mixer.queryOsc(path, queryIndex, timeoutMs) // one retry: UDP can drop a packet
+			return this.dataStore.get(cacheKey)
+		})
 		this.pendingValueReads.set(cacheKey, request)
 		try {
 			return await request
@@ -409,8 +437,17 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	public onOscMessage(path: string, args: OSCValue[]): void {
+		this.markConsoleSeen()
 		const suppressLog = this.shouldSuppressIpadFilenameReply(path)
 		const incoming = args.map(truncateFloat)
+		const ownChange = this.localSetAt.get(path)
+		if (
+			ownChange !== undefined &&
+			Date.now() - ownChange < 400 &&
+			incoming.length === 1 &&
+			typeof incoming[0] === 'number'
+		)
+			return // late echo of a value we just sent
 		const record = parseEntityRecord(path, incoming)
 		const root = record ? record.schemaPath.split('/').filter(Boolean)[0] : undefined
 		const newEntityRecord =
@@ -507,7 +544,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				)
 			}
 			this.mixer = createMixer(this, this.config)
-			this.updateStatus(InstanceStatus.Ok)
+			this.updateStatus(InstanceStatus.Connecting, 'Waiting for the console to reply')
+			this.startHeartbeat()
 			const generation = ++this.discoveryGeneration
 			void this.discoverSelectors(generation)
 		} catch (error) {
@@ -590,7 +628,47 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		this.setVariableValues(values)
 	}
 
+	/** Any message from the console proves it's there. Coming back after a drop-out: re-read everything. */
+	private markConsoleSeen(): void {
+		this.lastSeen = Date.now()
+		if (this.consoleOnline) return
+		const wasDown = this.hadConnection // it was online before, then went quiet
+		this.consoleOnline = true
+		this.hadConnection = true
+		this.updateStatus(InstanceStatus.Ok)
+		if (wasDown) {
+			logger.info('Console is back: refreshing everything')
+			this.dataStore.clear()
+			void this.discoverSelectors(++this.discoveryGeneration)
+		}
+	}
+
+	private hadConnection = false
+
+	/** Ask the console for its name every few seconds; no answer for 15 s = disconnected. */
+	private startHeartbeat(): void {
+		this.stopHeartbeat()
+		this.lastSeen = 0
+		this.consoleOnline = false
+		this.hadConnection = false
+		this.heartbeatTimer = setInterval(() => {
+			if (!this.mixer) return
+			const quietFor = Date.now() - this.lastSeen
+			if (quietFor > 4000) void this.mixer.queryOsc('/Console/Name', undefined, OSC_QUERY_TIMEOUT_MS).catch(() => null)
+			if (this.consoleOnline && quietFor > 15000) {
+				this.consoleOnline = false
+				this.updateStatus(InstanceStatus.Disconnected, 'No reply from the console for 15 s')
+			}
+		}, 5000)
+	}
+
+	private stopHeartbeat(): void {
+		if (this.heartbeatTimer) clearInterval(this.heartbeatTimer)
+		this.heartbeatTimer = undefined
+	}
+
 	private async stopRuntime(): Promise<void> {
+		this.stopHeartbeat()
 		this.discoveryGeneration++
 		this.pendingValueReads.clear()
 		if (this.definitionsTimer) clearTimeout(this.definitionsTimer)
