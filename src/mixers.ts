@@ -76,7 +76,9 @@ export class digico {
 			this.receiveSocketListening = true
 			this.receiveSocketFailed = false
 			if (this.pendingQueries.size === 0) this.activeQueryPath = undefined
-			instance.updateStatus(InstanceStatus.Ok)
+			// Listening only means our socket is open, not that the console is answering:
+			// the heartbeat in main.ts sets Ok when the console actually replies.
+			instance.updateStatus(InstanceStatus.Connecting, 'Waiting for the console to reply')
 			logger.debug(`Listening on UDP ${config.receivePort}`)
 		})
 		this.socket.bind(config.receivePort)

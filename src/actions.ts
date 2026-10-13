@@ -22,6 +22,7 @@ import {
 } from './commandTable.js'
 import { getMappedChoices, getValueSelectorPath } from './valueMappings.js'
 import { getEntityRecordDefinition, hasEntityRoot } from './entityRecords.js'
+import { getKnobActions } from './knobs.js'
 
 const logger = createModuleLogger('action')
 
@@ -82,6 +83,13 @@ function wireArguments(row: CommandRow, value: unknown): OSCSomeArguments {
 	if (type === 'String') return [{ type: 's', value: stringValue(value) }]
 	const number = numberToWire(row, Number(value ?? 0))
 	return type === 'Int' ? [{ type: 'i', value: Math.trunc(number) }] : [{ type: 'f', value: number }]
+}
+
+// A newer ramp (or plain relative change) on the same path stops an older ramp.
+const rampTokens = new Map<string, number>()
+
+function clampToRow(row: CommandRow, value: number): number {
+	return Math.min(row.max ?? Infinity, Math.max(row.min ?? -Infinity, value))
 }
 
 function interpolate(row: CommandRow, from: number, to: number, progress: number): number {
@@ -483,13 +491,16 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 							}
 							const current = numberFromWire(row, raw)
 							const entered = Number(value ?? 0)
-							const target = event.options.relative === true ? current + entered : entered
+							const target = clampToRow(row, event.options.relative === true ? current + entered : entered)
+							const token = (rampTokens.get(path) ?? 0) + 1
+							rampTokens.set(path, token)
 							if (event.options.crossfade !== true) {
 								self.send_osc(path, wireArguments(row, target))
 								return
 							}
 							const steps = Math.max(1, Math.ceil(duration / 50))
 							for (let step = 1; step <= steps; step++) {
+								if (rampTokens.get(path) !== token) return // superseded by a newer change
 								self.send_osc(
 									path,
 									wireArguments(row, step === steps ? target : interpolate(row, current, target, step / steps)),
@@ -506,5 +517,6 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 		}
 		actions[id] = action
 	}
+	Object.assign(actions, getKnobActions(self))
 	self.setActionDefinitions(actions)
 }

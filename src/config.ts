@@ -12,8 +12,9 @@ export type ModuleConfig = {
 
 export const DEFAULT_CONFIG: ModuleConfig = {
 	ip: '192.168.1.100',
-	transmitPort: 7000,
-	receivePort: 7001,
+	// Matches HELP.md (console Send 7000 -> Companion listens on 7000; Companion sends to console Rcv 7001).
+	transmitPort: 7001,
+	receivePort: 7000,
 	ipadEnabled: false,
 	ipadIp: '192.168.1.101',
 	ipadTransmitPort: 7002,
@@ -33,7 +34,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'number',
 			id: 'receivePort',
-			label: 'Receive Port',
+			label: 'Companion listens on (= console Send port)',
 			width: 4,
 			min: 1,
 			max: 65535,
@@ -42,7 +43,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'number',
 			id: 'transmitPort',
-			label: 'Transmit Port',
+			label: 'Companion sends to (= console Rcv port)',
 			width: 4,
 			min: 1,
 			max: 65535,

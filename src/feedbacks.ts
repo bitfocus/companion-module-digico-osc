@@ -6,6 +6,7 @@ import type {
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
 import type ModuleInstance from './main.js'
+import { getKnobFeedbacks } from './knobs.js'
 import type { CommandRow } from './commandTable.js'
 import {
 	getPathAxisLabel,
@@ -223,5 +224,6 @@ export function UpdateFeedbacks(self: ModuleInstance, rows: CommandRow[]): void 
 			},
 		}
 	}
+	Object.assign(feedbacks, getKnobFeedbacks(self))
 	self.setFeedbackDefinitions(feedbacks)
 }

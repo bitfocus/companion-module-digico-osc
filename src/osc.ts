@@ -1,5 +1,6 @@
 export type OSCValue = number | string | Uint8Array | boolean | null
-export const OSC_QUERY_TIMEOUT_MS = 150
+// 150 ms was too tight over Wi-Fi or a busy show network; queries now also retry once.
+export const OSC_QUERY_TIMEOUT_MS = 400
 
 export type IncomingOscMessage = {
 	path: string
