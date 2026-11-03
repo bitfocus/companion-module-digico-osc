@@ -7,8 +7,8 @@
 	"description": "Control of DiGiCo SD and Quantum Consoles via OSC",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/MeestorX/companion-module-digico-osc.git",
-	"bugs": "https://github.com/MeestorX/companion-module-digico-osc.git/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-digico-osc.git",
+	"bugs": "https://discourse.checkcheckonetwo.com/c/stream-deck-companion/digico-osc-module",
 	"maintainers": [
 		{
 			"name": "Andrew Broughton",
