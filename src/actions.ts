@@ -157,6 +157,7 @@ function actionOptions(
 		default: Math.min(max, Math.max(min, 0)),
 		min,
 		max,
+		showMinAsNegativeInfinity: row.units.toLowerCase() === 'db' && row.min === -150,
 	})
 	if ((type === 'Int' || type === 'Float') && !isBooleanDataType(row.dataType) && isReadable(row)) {
 		options.push(

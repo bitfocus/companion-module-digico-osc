@@ -62,6 +62,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	)
 	private discoveryGeneration = 0
 	private definitionsTimer: ReturnType<typeof setTimeout> | undefined
+	private handshakeComplete = false
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -74,6 +75,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		this.updateVariableDefinitions()
 		this.publishCounts()
 		this.setVariableValues({ filename: '' })
+		this.updateActions()
+		this.updateFeedbacks()
 		this.startRuntime()
 	}
 
@@ -87,6 +90,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		this.config = this.normalizeConfig(config)
 		this.commandRows = loadCommandTable()
 		this.selectorProviders = deriveSelectorProviders(this.commandRows)
+		this.updateActions()
+		this.updateFeedbacks()
 		this.startRuntime()
 	}
 
@@ -113,6 +118,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	): Promise<JsonValue | undefined> {
 		const cacheKey = queryIndex === undefined ? path : `${path}|${queryIndex}`
 		if (this.dataStore.has(cacheKey)) return this.dataStore.get(cacheKey)
+		if (!this.handshakeComplete && path !== '/Console/Name') return undefined
 		if (!this.mixer) return undefined
 		const existing = this.pendingValueReads.get(cacheKey)
 		if (existing) return existing
@@ -507,7 +513,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				)
 			}
 			this.mixer = createMixer(this, this.config)
-			this.updateStatus(InstanceStatus.Ok)
+			this.updateStatus(InstanceStatus.Connecting)
 			const generation = ++this.discoveryGeneration
 			void this.discoverSelectors(generation)
 		} catch (error) {
@@ -517,18 +523,15 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	private async discoverSelectors(generation: number): Promise<void> {
+		if (!this.mixer || !(await this.waitForConsole(generation))) return
+		const consoleName = this.dataStore.get('/Console/Name')
+		logger.info(`Startup query /Console/Name: ${JSON.stringify(consoleName)}`)
 		void this.getOscValueOrQuery('/Console/Session/Filename').catch((error) =>
 			logger.debug(`Unable to query session filename: ${String(error)}`),
 		)
-		if (this.mixer) {
-			await this.getOscValueOrQuery('/Console/Channels', 500)
-			await delay(50)
-			const consoleName = await this.getOscValueOrQuery('/Console/Name')
-			logger.info(
-				`Startup query /Console/Name: ${consoleName === undefined ? 'no reply' : JSON.stringify(consoleName)}`,
-			)
-			this.send_osc('/Console/Session/!', [])
-		}
+		await this.getOscValueOrQuery('/Console/Channels', 500)
+		await delay(50)
+		this.send_osc('/Console/Session/!', [])
 		if (generation !== this.discoveryGeneration) return
 		for (const provider of this.selectorProviders) {
 			const reported = this.dataStore.get(provider.countPath)
@@ -545,8 +548,32 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		}
 		await this.discoverEntityLists(generation)
 		this.publishCounts()
-		this.updateActions()
-		this.updateFeedbacks()
+	}
+
+	private async waitForConsole(generation: number): Promise<boolean> {
+		while (generation === this.discoveryGeneration && this.mixer) {
+			const mixer = this.mixer
+			this.dataStore.delete('/Console/Name')
+			await mixer.queryOsc('/Console/Name', undefined, 1000)
+			if (generation !== this.discoveryGeneration || !this.mixer) return false
+			if (this.dataStore.has('/Console/Name')) {
+				this.handshakeComplete = true
+				this.updateStatus(InstanceStatus.Ok)
+				return true
+			}
+
+			this.updateStatus(InstanceStatus.UnknownWarning, 'No response received from connected Mixer')
+			const retryAt = Date.now() + 2000
+			while (Date.now() < retryAt && generation === this.discoveryGeneration) {
+				if (this.dataStore.has('/Console/Name')) {
+					this.handshakeComplete = true
+					this.updateStatus(InstanceStatus.Ok)
+					return true
+				}
+				await delay(Math.min(100, retryAt - Date.now()))
+			}
+		}
+		return false
 	}
 
 	private async discoverEntityLists(generation: number): Promise<void> {
@@ -592,6 +619,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	private async stopRuntime(): Promise<void> {
 		this.discoveryGeneration++
+		this.handshakeComplete = false
 		this.pendingValueReads.clear()
 		if (this.definitionsTimer) clearTimeout(this.definitionsTimer)
 		this.definitionsTimer = undefined

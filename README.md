@@ -9,7 +9,11 @@ You can also connect the DiGiCo iPad app to the module, by selecting iPad in the
 
 ## Version History
 
-### 0.9.1
+### 2.0.0
+
+- Version change only to appear after the current 1.0.4
+
+#### 0.9.1
 
 - Updated Macro Buttons to work with configured OSC buttons
 

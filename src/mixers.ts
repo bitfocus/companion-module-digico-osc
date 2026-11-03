@@ -76,7 +76,6 @@ export class digico {
 			this.receiveSocketListening = true
 			this.receiveSocketFailed = false
 			if (this.pendingQueries.size === 0) this.activeQueryPath = undefined
-			instance.updateStatus(InstanceStatus.Ok)
 			logger.debug(`Listening on UDP ${config.receivePort}`)
 		})
 		this.socket.bind(config.receivePort)

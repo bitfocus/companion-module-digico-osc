@@ -51,7 +51,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'checkbox',
 			id: 'ipadEnabled',
-			label: 'Enable iPad connection',
+			label: 'Enable simultaneous iPad connection',
 			width: 8,
 			default: DEFAULT_CONFIG.ipadEnabled,
 			disableAutoExpression: true,

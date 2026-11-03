@@ -19,7 +19,7 @@ import { getMappedValue, getValueSelectorPath } from './valueMappings.js'
 import { getEntityRecordDefinition, hasEntityRoot } from './entityRecords.js'
 
 export type FeedbackOptions = CompanionOptionValues
-export type FeedbacksSchema = Record<string, { type: 'value'; options: FeedbackOptions }>
+export type FeedbacksSchema = Record<string, { type: 'value'; options: FeedbackOptions; result: JsonValue }>
 
 function scaledFeedback(row: CommandRow, value: JsonValue): JsonValue {
 	const mapped = getMappedValue(row, value, 'feedback')
