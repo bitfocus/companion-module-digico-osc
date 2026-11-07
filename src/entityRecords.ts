@@ -4,21 +4,58 @@ import entitySchemas from './entity-schemas.json' with { type: 'json' }
 
 export type EntityRecordDefinition = {
 	responsePath: string
-	fields: string
+	fields:
+		| string
+		| {
+				prefix: string[]
+				repeat: { count: number; fields: string[] }
+		  }
+	keyFields?: string[]
+	collectRecords?: boolean
+	selectorLabelFields?: string[]
+	selectorLabel?: string
+	selectorLabelTemplate?: string
+	recordArraySelectors?: {
+		position: EntityRecordPositionSelectorDefinition
+		bank: EntityRecordBankSelectorDefinition
+	}
+	arrayResult?: { count: number; sectionField: string; indexField: string }
+	queryOnStartup?: boolean
 	queryPath?: string
 	countPath?: string
 	emptyChoicesLabel?: string
 }
 
+export type EntityRecordPositionSelectorDefinition = {
+	id: string
+	label: string
+	groupFields: string[]
+	sideLabels?: Record<string, string>
+	indexField: string
+	indexOffset: number
+	labelTemplate: string
+}
+
+export type EntityRecordBankSelectorDefinition = {
+	idPrefix: string
+	label: string
+	positionFields: string[]
+	labelTemplate: string
+	indexField: string
+	nameField: string
+}
+
 const definitions = entitySchemas as {
 	records: Record<string, EntityRecordDefinition>
 	targetCounts: Record<string, number>
+	listRoots?: string[]
 }
 const targetCounts = definitions.targetCounts
 
 export type EntityRecord = {
 	schemaPath: string
-	index: number
+	key: string
+	index?: number
 	value: Record<string, number | string>
 }
 
@@ -37,8 +74,19 @@ export function parseEntityRecord(path: string, args: OSCValue[]): EntityRecord 
 	)
 	if (!definition) return undefined
 	const schemaPath = definition.responsePath
-	const schema = definition.fields
-	const fields = schema.split(',')
+	const fieldDefinition = definition.fields
+	let fields: string[]
+	if (typeof fieldDefinition === 'string') {
+		fields = fieldDefinition.split(',')
+	} else {
+		const repeatedFields = fieldDefinition.repeat.fields
+		fields = [
+			...fieldDefinition.prefix,
+			...Array.from({ length: fieldDefinition.repeat.count }, (_, position) =>
+				repeatedFields.map((field) => `${field}_${position + 1}`),
+			).flat(),
+		]
+	}
 	if (fields.length !== args.length) return undefined
 	const value: Record<string, number | string> = {}
 	for (const [position, field] of fields.entries()) {
@@ -54,8 +102,13 @@ export function parseEntityRecord(path: string, args: OSCValue[]): EntityRecord 
 					? raw / scale
 					: raw
 	}
-	const index = value.index
-	return typeof index === 'number' && Number.isInteger(index) ? { schemaPath, index, value } : undefined
+	const rawIndex = value.index
+	const index = typeof rawIndex === 'number' && Number.isInteger(rawIndex) ? rawIndex : undefined
+	const keyFields = definition.keyFields ?? ['index']
+	const keyValues = keyFields.map((field) => value[field])
+	if (keyValues.some((field) => field === undefined)) return undefined
+	const key = keyFields.length === 1 && keyFields[0] === 'index' ? String(keyValues[0]) : JSON.stringify(keyValues)
+	return { schemaPath, key, index, value }
 }
 
 export function entitySchemaPaths(): string[] {
@@ -63,7 +116,7 @@ export function entitySchemaPaths(): string[] {
 }
 
 export function entityRoots(): string[] {
-	return [...new Set(entitySchemaPaths().map((path) => path.split('/').filter(Boolean)[0]))]
+	return definitions.listRoots ?? [...new Set(entitySchemaPaths().map((path) => path.split('/').filter(Boolean)[0]))]
 }
 
 export function hasEntityRoot(root: string): boolean {

@@ -19,8 +19,6 @@ type PendingQuery = {
 	timeoutMs: number
 }
 
-const sleep = async (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
-
 function encodeOscQuery(path: string, index?: number): Buffer {
 	const encodePaddedString = (value: string): Buffer => {
 		const bytes = Buffer.from(value, 'utf8')
@@ -45,10 +43,12 @@ export class digico {
 	private readonly socket: SharedUdpSocket
 	private readonly socketReady: Promise<void>
 	private receiveSocketListening = false
-	private receiveSocketFailed = false
+	private receiveSocketUnavailable = false
 	private querySocketFailureLogged = false
 	private activeQueryPath: string | undefined
 	private stopped = false
+	private sendWake: (() => void) | undefined
+	private receiveWake: (() => void) | undefined
 	private readonly sendWorker: Promise<void>
 	private readonly receiveWorker: Promise<void>
 
@@ -56,10 +56,11 @@ export class digico {
 		private readonly instance: ModuleInstance,
 		private readonly config: ModuleConfig,
 	) {
-		this.socket = instance.createSharedUdpSocket('udp4', (packet) => {
-			if (!this.stopped) {
+		this.socket = instance.createSharedUdpSocket('udp4', (packet, remote) => {
+			if (!this.stopped && remote.address === this.config.ip) {
 				instance.forwardConsoleOscPacket(packet)
 				this.receiveQueue.push(packet)
+				this.wakeReceiveQueue()
 			}
 		})
 		this.socketReady = new Promise<void>((resolve) => {
@@ -67,14 +68,17 @@ export class digico {
 			this.socket.once('error', () => resolve())
 		})
 		this.socket.on('error', (error) => {
-			this.receiveSocketListening = false
-			this.receiveSocketFailed = true
-			instance.updateStatus(InstanceStatus.UnknownError, `OSC receive error: ${error.message}`)
-			logger.error(`OSC receive error: ${error.message}`)
+			if (!this.receiveSocketListening) {
+				this.receiveSocketUnavailable = true
+				instance.updateStatus(InstanceStatus.UnknownError, `OSC receive socket error: ${error.message}`)
+				logger.error(`OSC receive socket error: ${error.message}`)
+			} else {
+				logger.warn(`OSC UDP send error: ${error.message}`)
+			}
 		})
 		this.socket.on('listening', () => {
 			this.receiveSocketListening = true
-			this.receiveSocketFailed = false
+			this.receiveSocketUnavailable = false
 			if (this.pendingQueries.size === 0) this.activeQueryPath = undefined
 			logger.debug(`Listening on UDP ${config.receivePort}`)
 		})
@@ -84,7 +88,14 @@ export class digico {
 	}
 
 	public sendOsc(path: string, args: OSCSomeArguments): void {
-		if (!this.stopped) this.sendQueue.push({ path, args })
+		if (!this.stopped) {
+			this.sendQueue.push({ path, args })
+			this.wakeSendQueue()
+		}
+	}
+
+	public get hasReceiveSocketFailed(): boolean {
+		return this.receiveSocketUnavailable
 	}
 
 	public async queryOsc(path: string, index?: number, timeoutMs = OSC_QUERY_TIMEOUT_MS): Promise<boolean> {
@@ -101,11 +112,14 @@ export class digico {
 				queryTimeoutMs: timeoutMs,
 				resolveQuery: resolve,
 			})
+			this.wakeSendQueue()
 		})
 	}
 
 	public async destroy(): Promise<void> {
 		this.stopped = true
+		this.wakeSendQueue()
+		this.wakeReceiveQueue()
 		try {
 			await this.socketReady
 			await new Promise<void>((resolve) => this.socket.close(resolve))
@@ -124,11 +138,11 @@ export class digico {
 			const queueIndex = this.activeQueryPath ? this.sendQueue.findIndex((queued) => !queued.query) : 0
 			const message = queueIndex < 0 ? undefined : this.sendQueue.splice(queueIndex, 1)[0]
 			if (!message) {
-				await sleep(5)
+				await new Promise<void>((resolve) => (this.sendWake = resolve))
 				continue
 			}
 			if (message.query && !this.receiveSocketListening) {
-				if (this.receiveSocketFailed) {
+				if (this.receiveSocketUnavailable) {
 					this.activeQueryPath = undefined
 					if (!this.querySocketFailureLogged) {
 						this.querySocketFailureLogged = true
@@ -139,7 +153,7 @@ export class digico {
 				}
 				this.activeQueryPath = message.path.replace(/\/?\?$/, '')
 				this.sendQueue.unshift(message)
-				await sleep(5)
+				await this.socketReady
 				continue
 			}
 			try {
@@ -171,7 +185,7 @@ export class digico {
 		while (!this.stopped) {
 			const packet = this.receiveQueue.shift()
 			if (!packet) {
-				await sleep(5)
+				await new Promise<void>((resolve) => (this.receiveWake = resolve))
 				continue
 			}
 			try {
@@ -194,6 +208,16 @@ export class digico {
 				)
 			}
 		}
+	}
+
+	private wakeSendQueue(): void {
+		this.sendWake?.()
+		this.sendWake = undefined
+	}
+
+	private wakeReceiveQueue(): void {
+		this.receiveWake?.()
+		this.receiveWake = undefined
 	}
 
 	private trackPendingQuery(path: string, timeoutMs: number, resolve: (received: boolean) => void): void {
@@ -225,6 +249,7 @@ export class digico {
 		clearTimeout(pending.timeout)
 		this.pendingQueries.delete(path)
 		if (this.activeQueryPath === path) this.activeQueryPath = undefined
+		this.wakeSendQueue()
 		if (!received && logTimeout) logger.debug(`Query timed out after ${pending.timeoutMs} ms: ${path}`)
 		pending.resolve(received)
 	}

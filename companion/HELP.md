@@ -1,197 +1,76 @@
-## companion-module-digico
+## DiGiCo SD / Quantum setup
 
-# DiGiCo SD / Quantum --- DiGiCo Module OSC Setup
+Configure a **DiGiCo Pad** external-control device on the console, then configure the DiGiCo module with the matching network ports. The steps below apply to SD and Quantum consoles; the required Commands Allowed file depends on the console family.
 
-To use this module, configure a **DiGiCo Pad** external-control
-connection on a DiGiCo SD or Quantum console, using (as an example):
+The examples use UDP ports `7000` and `7001` for OSC communication. These differ from Companion's default Web UI port `8000`.
 
-- **Console Send port:** `7000`
-- **Console Receive port:** `7001`
+### 1. Enable External Control
 
-> **Port direction is from the console's perspective:**\
-> `7000` = console → Companion\
-> `7001` = Companion → console
+On the console, open **System → External Control** and set **Enable External Control** to **Yes**.
 
-## 1. Open External Control
-
-On the console Master screen, go to:
-
-**System → External Control**
-
-Set:
-
-**Enable External Control → YES**
-
-## 2. Add the Remote Device
+### 2. Add the Companion device
 
 Under **External Devices**:
 
-1.  Press **Add Device**.
-2.  Select **DiGiCo Pad**.
-3.  Give the device a descriptive name, such as `Companion`.
+1. Select **Add Device** and choose **DiGiCo Pad**.
+2. Name the device (for example, `Companion`).
+3. Enter the IP address of the computer running the DiGiCo module. This is the Companion computer's address, not the console's.
+4. Set **Send** to `7000` and **Rcv** to `7001`, then enable the device.
 
-> Use **DiGiCo Pad**, not **Other OSC**, when you want the DiGiCo
-> remote-control command set.
+Use **DiGiCo Pad**, rather than **Other OSC**, to access DiGiCo's remote-control command set.
 
-## 3. Enter the Remote IP Address
+### 3. Load the console's Commands Allowed file
 
-Enter the **IP address of the computer that's running the DiGiCo Companion module.
+In the **Commands Allowed** section at the bottom of External Control, select **Load** and choose the file for your console family. If an incorrect command set is already loaded, select **Clear All** first.
 
-This is the IP address of the computer, **not the console IP address**.
+| Console family                | Commands Allowed file                        |
+| ----------------------------- | -------------------------------------------- |
+| SD8, SD9, SD11, SD12, SD12-96 | `iPadv2sd8-9-11-12`                          |
+| Quantum                       | `ipad_q3` (the iPad v2 Quantum command file) |
 
-## 4. Configure the UDP Ports
+After loading, confirm the command list is populated and **No commands are enabled** is no longer shown.
 
-Set the DiGiCo Pad device to:
+### 4. Configure the DiGiCo module
 
-Setting Value
+In the module, use the console's **Local IP Address** from the External Control window as the destination, and set the ports as follows:
 
----
+| Module setting        | Value                        |
+| --------------------- | ---------------------------- |
+| Receive/listen port   | `7000`                       |
+| Send destination port | `7001`                       |
+| Send destination IP   | Console **Local IP Address** |
 
-**Send** `7000`
-**Rcv** `7001`
-**Enabled** Yes
+The port numbers are from the console's perspective: its **Rcv 7001** receives Companion commands, and its **Send 7000** sends console feedback to the Companion computer.
 
-The resulting network flow is:
+### 5. Check the connection settings
 
-```text
-DiGiCo Console                      Companion Computer
-      │                                    │
-      │────── UDP → port 7000 ────────────>│
-      │       OSC feedback/status          │
-      │                                    │
-      │<───── UDP → port 7001 ─────────────│
-      │       OSC control commands         │
-```
+- External Control and the DiGiCo Pad device are enabled.
+- The DiGiCo Pad IP address is the Companion computer's IP address.
+- **Bundles**: Off.
+- **Suppress OSC Retransmit**: On.
+- The correct Commands Allowed file is loaded and its commands are enabled.
 
-Therefore, configure the DiGiCo Companion module as follows:
+### 6. Add an iPad at the same time (optional)
 
-```text
-Receive/listen port: 7000
+The module can relay OSC between the console and a DiGiCo iPad app while it remains connected to Companion.
 
-Send destination:
-    IP address: <DiGiCo console IP>
-    UDP port:   7001
-```
+1. In the module connection settings, enable **Enable simultaneous iPad connection**.
+2. Set **iPad IP Address** to the iPad's IP address on the same network as the Companion computer.
+3. Set the iPad relay ports. The defaults are **iPad Receive Port** `7002` and **iPad Transmit Port** `7003`. The receive port must differ from the module's **Receive Port** (`7000` by default).
+4. In the DiGiCo iPad app, set its console/OSC destination IP to the Companion computer's IP address and its send/destination port to the module's **iPad Receive Port**. Set the app's OSC receive/listen port to the module's **iPad Transmit Port**.
 
-## 5. Enable the Device
+Port direction is from the module's perspective: OSC from the iPad arrives at Companion on `7002`, is forwarded to the console using the module's normal transmit settings, and console OSC replies are sent to the iPad at its configured IP and port `7003`. If you change either iPad port in Companion, use the matching port in the app. Keep these ports available on the network and firewall.
 
-In the **Enabled** column for the new DiGiCo Pad device, enable the
-device.
+## Using actions
 
-## 6. Load the Commands Allowed File
+Choose the relevant DiGiCo action and select the channel, output, snapshot, macro, or other item. Where a selector supports multiple choices, use it to target more than one item; **All** targets every available choice. Numeric values use the units shown in the field label. **Relative** applies a change to the current value, and **Cross-fade** ramps supported numeric values over the selected duration.
 
-At the bottom of the **External Control** window, locate **Commands
-Allowed**.
+On/off actions provide **Off**, **On**, and **Toggle** where the console command supports them. Toggle reads the current console value before sending the opposite state.
 
-If the console reports that no commands are enabled:
+## Using feedbacks
 
-1.  Press **Clear All** if an old or incorrect command set may already
-    be loaded.
-2.  Press **Load**.
-3.  Select the command file appropriate for the console family.
+Value feedbacks report the selected console value for expressions and Companion logic. Their results can also drive text or internal actions. For button coloring, use the matching **(On)** boolean feedback for supported on/off parameters; set its feedback style in Companion to choose the active color. **Macro button state** is a boolean feedback for macro buttons.
 
-### SD8 / SD9 / SD11 / SD12
+## Variables
 
-For an SD8, SD9, SD11, SD12, or SD12-96, load:
-
-```text
-iPadv2sd8-9-11-12
-```
-
-### Quantum Consoles
-
-For a Quantum console, select the corresponding **iPad v2 Quantum
-command file** shown in the console's **Load** dialog.
-
-For any Quantum console, load:
-
-```text
-ipad_q3
-```
-
-## 7. Verify Commands Are Enabled
-
-After loading the command file, verify that **Commands Allowed** no
-longer reports:
-
-```text
-No commands are enabled
-```
-
-The permitted command set should now be populated.
-
-## 8. Note the Console IP Address
-
-The External Control window displays the console's **Local IP Address**.
-
-Use this as the destination IP address when the DiGiCo Companion Module sends commands to the console:
-
-```text
-Companion → DiGiCo Console
-
-Destination IP:   <console Local IP Address>
-Destination port: 7001
-```
-
-The console sends feedback to the Companion Computer configured in the DiGiCo Pad entry:
-
-```text
-DiGiCo Console → Companion Computer
-
-Destination IP:   <Companion Computer IP address>
-Destination port: 7000
-```
-
-## 9. Recommended Settings for OSC Development
-
-In summary, here are the settings:
-
-- **Enable External Control:** Yes
-- **Device Type:** DiGiCo Pad
-- **Send:** `7000`
-- **Rcv:** `7001`
-- **Device Enabled:** Yes
-- **Bundles:** Off initially
-- **Suppress OSC Retransmit:** On
-- **Commands Allowed:** Correct iPad v2 file for the console
-
-Keeping **Bundles** off
-
-## SD12 / SD12-96 Quick Reference
-
-```text
-System
- └── External Control
-      │
-      ├── Enable External Control: YES
-      │
-      ├── Add Device
-      │    └── DiGiCo Pad
-      │
-      ├── Name: Companion
-      ├── IP Address: <Companion IP>
-      ├── Send: 7000
-      ├── Rcv:  7001
-      ├── Enabled: YES
-      ├── Bundles: OFF
-      ├── Suppress OSC Retransmit: ON
-      │
-      └── Commands Allowed
-           ├── Clear All
-           └── Load
-                └── iPadv2sd8-9-11-12
-```
-
-## Network Summary
-
-```text
-                 UDP 7000
-       OSC feedback / console status
-DiGiCo ───────────────────────────────> Companion
-Console
-
-DiGiCo <─────────────────────────────── Companion
-Console
-       OSC commands / control
-                 UDP 7001
-```
+The module provides count variables for channel and entity families, plus **Filename** for the current console session filename. Counts update as the module discovers the console's available channels and records. Use the variable picker to see the exact variable names available for this connection.

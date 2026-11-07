@@ -1,5 +1,5 @@
 osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
-/Aux_Outputs/*/alternate_solo,Float,0,1,RW,Aux output alternate solo state - MAYBE?,,1
+/Aux_Outputs/*/alternate_solo,Float,0,1,,Aux output alternate solo state - MAYBE?,,1
 /Aux_Outputs/*/auto_solo,Float,0,3,RW,"Aux output automatic solo routing selection: OFF, Solo 1, Solo 2, or both",,1
 /Aux_Outputs/*/Buss_Trim/name,String,,,RW,Aux output name,,1
 /Aux_Outputs/*/Buss_Trim/phase,BFloat,0,1,RW,Aux output signal polarity (phase) state,,1
@@ -159,11 +159,11 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Console/Input_Channels/modes,Int,1,2,R,Mono/stereo format for the selected channels or outputs,,1
 /Console/Matrix_Inputs,Int,0,64,R,Reports the number of matrix inputs configured on the console,,1
 /Console/Matrix_Inputs/*/send_levels,Float,-150,0,RW,Send level values for selected items,,1
-/Console/Matrix_Inputs/*/send_ons,BInt,0,1,RW,Send enable states for selected items - MAYBE?,,1
+/Console/Matrix_Inputs/*/send_ons,BInt,0,1,,Send enable states for selected items - MAYBE?,,1
 /Console/Matrix_Outputs,Int,0,64,R,Reports the number of matrix outputs configured on the console,,1
 /Console/Multis,Int,0,256,R,Reports the number of multis configured on the console.,,1
 /Console/Name,String,,,R,Console name.,,1
-/Console/Session/!,Int,0,0,W,Command trigger or query response - MAYBE?,,1
+/Console/Session/!,Int,0,0,,Command trigger or query response - MAYBE?,,1
 /Console/Session/Filename,String,,,R,Name of the current session file.,,1
 /Console/Talkback_Outputs,Int,2,2,,Reports the number of talkback outputs configured on the console,,1
 /Control_Groups/*/aux_send,Float,-18,18,RW,Aux send level,dB,1
@@ -205,7 +205,7 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Graphic_EQ/*/geq_gain_32,Float,-12,12,RW,Graphic EQ band 32 gain,dB,1
 /Graphic_EQ/*/geq_in,BFloat,0,1,RW,Graphic EQ enable state,,1
 /Graphic_EQ/*/name,String,,,RW,Graphic EQ name.,,1
-/Group_Outputs/*/alternate_solo,Float,0,1,RW,Group output alternate solo state - MAYBE?,,1
+/Group_Outputs/*/alternate_solo,Float,0,1,,Group output alternate solo state - MAYBE?,,1
 /Group_Outputs/*/auto_solo,Float,0,3,RW,"Group output automatic solo routing selection: OFF, Solo 1, Solo 2, or both",,1
 /Group_Outputs/*/Aux_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
 /Group_Outputs/*/Aux_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
@@ -220,7 +220,7 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Group_Outputs/*/Buss_Trim/trim,Float,-40,60,RW,Group output digital input trim,dB,1
 /Group_Outputs/*/Buss_Trim/tube_meter/left,Float,2,2,RW,Group output left-channel meter reading,,1
 /Group_Outputs/*/Buss_Trim/tube_meter/right,Float,2,2,RW,Group output right-channel meter reading,,1
-/Group_Outputs/*/CGs_level,Float,-150,10,RW,Group output Control Group send level - MAYBE?,dB,1
+/Group_Outputs/*/CGs_level,Float,-150,10,,Group output Control Group send level - MAYBE?,dB,1
 /Group_Outputs/*/CGs_mute,BFloat,0,1,RW,Group output Control Group mute state,,1
 /Group_Outputs/*/Channel_Delay/delay,Float,0,1300,RW,Group output channel delay time,ms,1000
 /Group_Outputs/*/Channel_Delay/delay_on,BFloat,0,1,RW,Group output channel delay enable state,,1
@@ -339,8 +339,8 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Group_Outputs/*/Filters/hi_filter_in,BFloat,0,0,RW,High-pass filter enable state,,1
 /Group_Outputs/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,,1
 /Group_Outputs/*/Filters/lo_filter_in,BFloat,0,0,RW,Low-pass filter enable state,,1
-/Group_Outputs/*/group_sends,Int,0,0,RW,Group send states - MAYBE?,,1
-/Group_Outputs/*/Group_Send/*/group,Float,0,1,RW,Group send assignment state - MAYBE?,,1
+/Group_Outputs/*/group_sends,Int,0,0,,Group send states - MAYBE?,,1
+/Group_Outputs/*/Group_Send/*/group,Float,0,1,,Group send assignment state - MAYBE?,,1
 /Group_Outputs/*/hard_mute,BFloat,0,1,RW,Hard mute state,,1
 /Group_Outputs/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
 /Group_Outputs/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
@@ -362,7 +362,7 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Input_Channels/*/Aux_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
 /Input_Channels/*/Aux_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
 /Input_Channels/*/Aux_Send/*/send_pan,Float,-1,1,RW,Send pan position,,1
-/Input_Channels/*/CGs_level,Float,-150,10,RW,Input channel Control Group send level - MAYBE?,dB,1
+/Input_Channels/*/CGs_level,Float,-150,10,,Input channel Control Group send level - MAYBE?,dB,1
 /Input_Channels/*/CGs_mute,BFloat,0,1,RW,Input channel Control Group mute state,,1
 /Input_Channels/*/Channel_Delay/delay,Float,0,1300,RW,Input channel channel delay time,ms,1000
 /Input_Channels/*/Channel_Delay/delay_on,BFloat,0,1,RW,Input channel channel delay enable state,,1
@@ -371,7 +371,7 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Input_Channels/*/Channel_Input/alt_input_pad,BFloat,0,1,RW,Alternate input pad state,,1
 /Input_Channels/*/Channel_Input/alt_phantom,BFloat,0,1,RW,Alternate input 48 V phantom power state,,1
 /Input_Channels/*/Channel_Input/analog_gain,Float,-20,60,RW,Analog preamp gain,dB,1
-/Input_Channels/*/Channel_Input/input_type,Float,0,2,RW,Input source type (mic/line) - MAYBE?,,1
+/Input_Channels/*/Channel_Input/input_type,Float,0,2,,Input source type (mic/line) - MAYBE?,,1
 /Input_Channels/*/Channel_Input/input_pad,BFloat,0,1,RW,Input pad state,,1
 /Input_Channels/*/Channel_Input/main/alt_in,BFloat,0,1,RW,Main or alternate input selection,,1
 /Input_Channels/*/Channel_Input/name,String,,,RW,Input channel name.,,1
@@ -453,10 +453,10 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Input_Channels/*/EQ/eq_on_2,BFloat,0,1,RW,EQ band 2 enable state,,1
 /Input_Channels/*/EQ/eq_on_3,BFloat,0,1,RW,EQ band 3 enable state,,1
 /Input_Channels/*/EQ/eq_on_4,BFloat,0,1,RW,EQ band 4 enable state,,1
-/Input_Channels/*/EQ/eq_over-under_1,Bfloat,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
-/Input_Channels/*/EQ/eq_over-under_2,Bfloat,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
-/Input_Channels/*/EQ/eq_over-under_3,Bfloat,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
-/Input_Channels/*/EQ/eq_over-under_4,Bfloat,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_1,BFloat,0,1,RW,EQ band 1 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_2,BFloat,0,1,RW,EQ band 2 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_3,BFloat,0,1,RW,EQ band 3 dynamic EQ over/under mode,,1
+/Input_Channels/*/EQ/eq_over-under_4,BFloat,0,1,RW,EQ band 4 dynamic EQ over/under mode,,1
 /Input_Channels/*/EQ/eq_Q_1,Float,0.1,20,RW,EQ band 1 Q / bandwidth,,1
 /Input_Channels/*/EQ/eq_Q_2,Float,0.1,20,RW,EQ band 2 Q / bandwidth,,1
 /Input_Channels/*/EQ/eq_Q_3,Float,0.1,20,RW,EQ band 3 Q / bandwidth,,1
@@ -482,22 +482,21 @@ osc_path,data_type,osc_min,osc_max,rw,description,units,Scale
 /Input_Channels/*/Filters/hi_filter_in,BFloat,0,1,RW,High-pass filter enable state,,1
 /Input_Channels/*/Filters/lo_filter_freq,Float,20,20000,RW,Low-pass filter cutoff frequency,,1
 /Input_Channels/*/Filters/lo_filter_in,BFloat,0,1,RW,Low-pass filter enable state,,1
-/Input_Channels/*/group_sends,Int,0,0,RW,Group send states - MAYBE?,,1
-/Input_Channels/*/Group_Send/*/group,Float,0,1,RW,Group send assignment state - MAYBE?,,1
+/Input_Channels/*/group_sends,Int,0,0,,Group send states - MAYBE?,,1
+/Input_Channels/*/Group_Send/*/group,Float,0,1,,Group send assignment state - MAYBE?,,1
 /Input_Channels/*/Insert/insert_A_in,BFloat,0,1,RW,Insert A enable state,,1
 /Input_Channels/*/Insert/insert_B_in,BFloat,0,1,RW,Insert B enable state,,1
 /Input_Channels/*/mute,BFloat,0,1,RW,Input channel mute state.,,1
 /Input_Channels/*/Panner/f-b,Float,0,1,RW,Front-to-back pan position,,1
 /Input_Channels/*/Panner/pan,Float,-1,1,RW,Input channel pan position,,1
 /Input_Channels/*/solo,BFloat,0,1,RW,Input channel solo state.,,1
-/Layout/Layout/Banks,String,,,RW,Fader bank selection,,1
-/Layout/Layout/Banks/!,Int,0,0,RW,Command trigger or query response - MAYBE?,,1
+/Layout/Layout/Banks/!,Int,0,0,,Command trigger or query response - MAYBE?,,1
 /Matrix_Inputs/*/Channel_Input/name,String,,,RW,Matrix input name.,,1
 /Matrix_Inputs/*/Matrix_Send/*/send_level,Float,-150,10,RW,Send level,dB,1
 /Matrix_Inputs/*/Matrix_Send/*/send_on,BFloat,0,1,RW,Send enable state,,1
 /Matrix_Inputs/*/send_levels,Float,-150,10,,Get all values for a selected Matrix - MAYBE?,dB,1
 /Matrix_Inputs/*/send_ons,BInt,0,1,,Get all values for a selected Matrix - MAYBE?,,1
-/Matrix_Outputs/*/alternate_solo,Bfloat,0,1,RW,Matrix output alternate solo state - MAYBE?,,1
+/Matrix_Outputs/*/alternate_solo,BFloat,0,1,,Matrix output alternate solo state - MAYBE?,,1
 /Matrix_Outputs/*/Buss_Trim/name,String,,,RW,Matrix output name.,,1
 /Matrix_Outputs/*/Buss_Trim/phase,BFloat,0,1,RW,Matrix output signal polarity (phase) state,,1
 /Matrix_Outputs/*/Buss_Trim/post_meter,Float,2,2,RW,Matrix output post-fader signal meter reading,,1

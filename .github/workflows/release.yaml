@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package-and-release:
+    name: Package and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26.x
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build and package module
+        run: yarn package
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PACKAGE=$(find . -maxdepth 1 -type f -name '*.tgz' -print -quit)
+          if [ -z "$PACKAGE" ]; then
+            echo "No packaged .tgz found"
+            exit 1
+          fi
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$PACKAGE" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$PACKAGE" --generate-notes
+          fi

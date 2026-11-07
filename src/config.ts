@@ -1,4 +1,5 @@
 import { Regex, type SomeCompanionConfigField } from '@companion-module/base'
+import { networkInterfaces } from 'node:os'
 
 export type ModuleConfig = {
 	ip: string
@@ -12,23 +13,51 @@ export type ModuleConfig = {
 
 export const DEFAULT_CONFIG: ModuleConfig = {
 	ip: '192.168.1.100',
-	transmitPort: 7000,
-	receivePort: 7001,
+	transmitPort: 7001,
+	receivePort: 7000,
 	ipadEnabled: false,
 	ipadIp: '192.168.1.101',
-	ipadTransmitPort: 7002,
-	ipadReceivePort: 7003,
+	ipadTransmitPort: 7003,
+	ipadReceivePort: 7002,
+}
+
+function companionIpv4Fields(): SomeCompanionConfigField[] {
+	const addresses = Object.entries(networkInterfaces()).flatMap(([name, interfaces]) =>
+		(interfaces ?? [])
+			.filter((address) => address.family === 'IPv4' && !address.internal && !address.address.startsWith('169.254.'))
+			.map((address) => ({ interfaceName: name, address: address.address })),
+	)
+	const addressText = addresses.length
+		? addresses.map(({ interfaceName, address }) => `${address} (${interfaceName})`).join('  OR  ')
+		: 'No LAN IPv4 address found'
+	return [
+		{
+			type: 'static-text',
+			id: 'companion-ipv4-help',
+			label: 'Mixer setup',
+			value: 'Enter one of these Companion computer IPv4 addresses as the console’s DiGiCo Pad IP on the Mixer.',
+			width: 12,
+		},
+		{
+			type: 'static-text',
+			id: 'companion-ipv4-addresses',
+			label: 'Companion IPv4 address',
+			value: addressText,
+			width: 12,
+		},
+	]
 }
 
 export function GetConfigFields(): SomeCompanionConfigField[] {
 	return [
+		...companionIpv4Fields(),
 		{
 			type: 'textinput',
 			id: 'ip',
 			label: 'Mixer IP Address',
 			width: 8,
 			default: DEFAULT_CONFIG.ip,
-			regex: Regex.IP,
+			regex: Regex.IPV4,
 		},
 		{
 			type: 'number',
@@ -62,7 +91,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			label: 'iPad IP Address',
 			width: 8,
 			default: DEFAULT_CONFIG.ipadIp,
-			regex: Regex.IP,
+			regex: Regex.IPV4,
 			isVisibleExpression: '$(options:ipadEnabled)',
 		},
 		{

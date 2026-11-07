@@ -16,6 +16,7 @@ import { createMixer, type digico } from './mixers.js'
 import { IpadRelay } from './ipadRelay.js'
 import { OSC_QUERY_TIMEOUT_MS, type OSCValue } from './osc.js'
 import {
+	getEntityRecordDefinition,
 	entityRecordDefinitions,
 	entityRoots,
 	entitySchemaPaths,
@@ -45,6 +46,12 @@ function safeOscValue(value: OSCValue): JsonValue {
 	return value instanceof Uint8Array ? Buffer.from(value).toString('base64') : value
 }
 
+function labelValue(value: JsonValue | undefined): string {
+	if (value === null || value === undefined) return ''
+	if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+	return JSON.stringify(value) ?? ''
+}
+
 export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	config!: ModuleConfig
 	private commandRows: CommandRow[] = []
@@ -52,7 +59,10 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	private mixer: digico | undefined
 	private ipadRelay: IpadRelay | undefined
 	private readonly dataStore = new Map<string, JsonValue>()
+	private readonly parameterChoiceCache = new Map<string, Array<{ id: number | string; label: string }>>()
+	private readonly entityChoiceCache = new Map<string, Array<{ id: number; label: string }>>()
 	private readonly feedbackPaths = new Map<string, string>()
+	private readonly crossfades = new Map<string, symbol>()
 	private readonly pendingValueReads = new Map<string, Promise<JsonValue | undefined>>()
 	private readonly notificationQueries = new Set<string>()
 	private readonly entityRefreshes = new Map<string, Promise<void>>()
@@ -63,6 +73,10 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	private discoveryGeneration = 0
 	private definitionsTimer: ReturnType<typeof setTimeout> | undefined
 	private handshakeComplete = false
+	private runtimeConfigError: string | undefined
+	private ipadRelayError: string | undefined
+	private discoveryComplete = false
+	private definitionsRefreshPending = false
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -103,6 +117,26 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		this.mixer?.sendOsc(path, args)
 	}
 
+	public beginCrossfade(path: string): symbol {
+		const token = Symbol(path)
+		this.crossfades.set(path, token)
+		return token
+	}
+
+	public isCrossfadeCurrent(path: string, token: symbol): boolean {
+		return this.crossfades.get(path) === token
+	}
+
+	public cancelCrossfade(path: string): void {
+		this.crossfades.delete(path)
+	}
+
+	public reportIpadRelayError(message: string): void {
+		this.ipadRelayError = message
+		logger.error(message)
+		if (this.handshakeComplete && !this.runtimeConfigError) this.updateStatus(InstanceStatus.UnknownWarning, message)
+	}
+
 	public forwardConsoleOscPacket(packet: Buffer): void {
 		this.ipadRelay?.forwardConsolePacket(packet)
 	}
@@ -132,6 +166,9 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	public getParameterChoices(path: string, axis: number): Array<{ id: number | string; label: string }> {
+		const cacheKey = `${path}|${axis}`
+		const cached = this.parameterChoiceCache.get(cacheKey)
+		if (cached) return cached
 		const segment = getPathAxisSegment(path, axis)
 		const provider = selectorProviderForSegment(segment, this.selectorProviders)
 		const choicesByIndex = new Set<number>()
@@ -163,15 +200,20 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		const indexes = [...choicesByIndex]
 			.filter((index) => index >= 1 && (provider ? index <= (count ?? provider.maxCount) : true))
 			.sort((left, right) => left - right)
-		return [
+		const choices = [
 			{ id: 'all', label: 'All' },
 			...indexes.map((index) => ({ id: index, label: `${index}: ${names.get(index) || `${label} ${index}`}` })),
 		]
+		this.parameterChoiceCache.set(cacheKey, choices)
+		return choices
 	}
 
 	public getEntityChoices(root: string, section?: string): Array<{ id: number; label: string }> {
+		const cacheKey = `${root}|${section ?? ''}`
+		const cached = this.entityChoiceCache.get(cacheKey)
+		if (cached) return cached
 		const records = this.getEntityRecords(root)
-		return records
+		const choices = records
 			.filter((record) => section === undefined || String(record.section ?? '').trim() === section.trim())
 			.sort((left, right) =>
 				root === 'Presets'
@@ -196,6 +238,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				const label = `${index}: ${details ? `${details} ` : ''}${name}`
 				return { id: index, label }
 			})
+		this.entityChoiceCache.set(cacheKey, choices)
+		return choices
 	}
 
 	public getEntitySections(root: string): string[] {
@@ -307,6 +351,91 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			})
 	}
 
+	public getEntityRecordPositions(schemaPath: string): Array<{ id: string; label: string; key: string }> {
+		const definition = getEntityRecordDefinition(schemaPath)
+		const selector = definition?.recordArraySelectors?.position
+		if (!selector) return []
+		const prefix = `${schemaPath}|`
+		const records = [...this.dataStore].flatMap(([key, value]) =>
+			key.startsWith(prefix) && value && typeof value === 'object' && !Array.isArray(value)
+				? [{ key, record: value as Record<string, JsonValue> }]
+				: [],
+		)
+		const positions = new Map<string, { id: string; label: string; key: string }>()
+		for (const { record } of records) {
+			const group = selector.groupFields.map((field) => record[field])
+			if (group.some((field) => typeof field !== 'string' && typeof field !== 'number')) continue
+			const key = JSON.stringify(group)
+			if (positions.has(key)) continue
+			const labelRecord = { ...record }
+			const side = record[selector.groupFields[0]]
+			if (typeof side === 'string') labelRecord.sideLabel = selector.sideLabels?.[side] ?? side
+			const index = record[selector.indexField]
+			if (typeof index === 'number') labelRecord.position = index + selector.indexOffset
+			const label = selector.labelTemplate.replace(/\{([^}]+)\}/g, (_, field: string) => labelValue(labelRecord[field]))
+			positions.set(key, { id: label, label, key })
+		}
+		return [...positions.values()].sort((left, right) =>
+			left.label.localeCompare(right.label, undefined, { numeric: true }),
+		)
+	}
+
+	public getEntityRecordArrayChoices(schemaPath: string, positionKey: string): Array<{ id: string; label: string }> {
+		const definition = getEntityRecordDefinition(schemaPath)
+		const selector = definition?.recordArraySelectors?.bank
+		if (!selector) return []
+		let position: JsonValue[]
+		try {
+			const parsed: unknown = JSON.parse(positionKey)
+			if (!Array.isArray(parsed)) return []
+			position = parsed as JsonValue[]
+		} catch {
+			return []
+		}
+		if (position.length !== selector.positionFields.length) return []
+		const prefix = `${schemaPath}|`
+		const banks = [...this.dataStore].flatMap(([key, value]) => {
+			if (!key.startsWith(prefix) || !value || typeof value !== 'object' || Array.isArray(value)) return []
+			const record = value as Record<string, JsonValue>
+			if (!selector.positionFields.every((field, index) => labelValue(record[field]) === labelValue(position[index])))
+				return []
+			const index = record[selector.indexField]
+			if (typeof index !== 'number' && typeof index !== 'string') return []
+			return [{ key, record, index }]
+		})
+		banks.sort((left, right) =>
+			typeof left.index === 'number' && typeof right.index === 'number'
+				? left.index - right.index
+				: String(left.index).localeCompare(String(right.index), undefined, { numeric: true }),
+		)
+		return banks.map(({ key, record }, number) => {
+			const labelRecord: Record<string, JsonValue> = {
+				...record,
+				number: number + 1,
+				name: record[selector.nameField],
+			}
+			const label = selector.labelTemplate.replace(/\{([^}]+)\}/g, (_, field: string) => labelValue(labelRecord[field]))
+			return { id: key.slice(prefix.length), label }
+		})
+	}
+
+	public getEntityRecordArrayValue(schemaPath: string, key: string): JsonValue {
+		const definition = getEntityRecordDefinition(schemaPath)
+		const result = definition?.arrayResult
+		const rawRecord = this.dataStore.get(`${schemaPath}|${key}`)
+		if (!result || !rawRecord || typeof rawRecord !== 'object' || Array.isArray(rawRecord)) return null
+		const record = rawRecord as Record<string, JsonValue>
+		return Array.from({ length: result.count }, (_, position): JsonValue => {
+			const oneBased = position + 1
+			const section = record[result.sectionField.replace('{index}', String(oneBased))]
+			const index = record[result.indexField.replace('{index}', String(oneBased))]
+			return {
+				section: typeof section === 'string' ? section : '',
+				index: typeof index === 'number' ? index : 0,
+			}
+		})
+	}
+
 	public async getIndexedRecordOrQuery(
 		schemaPath: string,
 		index: number,
@@ -416,24 +545,40 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	public onOscMessage(path: string, args: OSCValue[]): void {
 		const suppressLog = this.shouldSuppressIpadFilenameReply(path)
+		const isNotification = path.endsWith('/!')
 		const incoming = args.map(truncateFloat)
-		const record = parseEntityRecord(path, incoming)
+		const record = isNotification ? undefined : parseEntityRecord(path, incoming)
 		const root = record ? record.schemaPath.split('/').filter(Boolean)[0] : undefined
-		const newEntityRecord =
-			record !== undefined &&
-			root !== undefined &&
-			record.schemaPath === `/${root}/name` &&
-			!this.dataStore.has(`${record.schemaPath}|${record.index}`)
-		const cachedValue: JsonValue =
-			record?.value ??
-			(incoming.length === 0 || path.endsWith('/modes') || incoming.length > 1
-				? incoming.map(safeOscValue)
-				: safeOscValue(incoming[0]))
-		const previous = this.dataStore.get(path)
-		this.dataStore.set(path, cachedValue)
-		if (record) this.dataStore.set(`${record.schemaPath}|${record.index}`, record.value)
-		if (!suppressLog) logger.debug(`Cached OSC value ${path} = ${JSON.stringify(cachedValue)}`)
-		if (path.endsWith('/!')) {
+		const recordDefinition = record ? getEntityRecordDefinition(record.schemaPath) : undefined
+		const newEntityRecord = record !== undefined && !this.dataStore.has(`${record.schemaPath}|${record.key}`)
+		const previous = isNotification ? undefined : this.dataStore.get(path)
+		let cachedValue: JsonValue | undefined
+		if (!isNotification) {
+			if (record) {
+				this.dataStore.set(`${record.schemaPath}|${record.key}`, record.value)
+				if (record.index !== undefined && record.key === String(record.index))
+					this.dataStore.set(`${record.schemaPath}|${record.index}`, record.value)
+			}
+			cachedValue = recordDefinition?.collectRecords
+				? [...this.dataStore]
+						.filter(
+							([key, value]) =>
+								key.startsWith(`${recordDefinition.responsePath}|`) &&
+								value !== null &&
+								typeof value === 'object' &&
+								!Array.isArray(value),
+						)
+						.map(([, value]) => value)
+				: (record?.value ??
+					(incoming.length === 0 || path.endsWith('/modes') || incoming.length > 1
+						? incoming.map(safeOscValue)
+						: safeOscValue(incoming[0])))
+			if (cachedValue !== undefined) {
+				this.dataStore.set(path, cachedValue)
+				if (!suppressLog) logger.debug(`Cached OSC value ${path} = ${JSON.stringify(cachedValue)}`)
+			}
+		}
+		if (isNotification) {
 			const queryPath = path.slice(0, -2)
 			if (queryPath && this.mixer) {
 				const root = queryPath.split('/').filter(Boolean)[0]
@@ -468,16 +613,16 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				: undefined
 		if (
 			JSON.stringify(previous) !== JSON.stringify(cachedValue) &&
-			(path.endsWith('/name') || (record && record.value.name !== previousRecordName))
+			(path.endsWith('/name') || newEntityRecord || (record && record.value.name !== previousRecordName))
 		)
 			this.scheduleDefinitionRefresh()
-		const changed = JSON.stringify(previous) !== JSON.stringify(cachedValue)
+		const changed = !isNotification && JSON.stringify(previous) !== JSON.stringify(cachedValue)
 		const feedbackIds = [...this.feedbackPaths]
 			.filter(([, watchedPath]) => watchedPath === path)
 			.map(([feedbackId]) => feedbackId)
 		if (changed && feedbackIds.length) this.checkFeedbacksById(...feedbackIds)
 		if (newEntityRecord && root) for (const resolve of this.entityRefreshWaiters.get(root) ?? []) resolve()
-		this.actionRecorder.record(path, incoming, this.commandRows)
+		if (!isNotification) this.actionRecorder.record(path, incoming, this.commandRows)
 		const provider = this.selectorProviders.find((entry) => entry.countPath === path)
 		if (provider && typeof cachedValue === 'number') {
 			this.dataStore.set(path, Math.max(0, Math.min(provider.maxCount, Math.trunc(cachedValue))))
@@ -501,6 +646,10 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	private startRuntime(): void {
 		try {
+			this.discoveryComplete = false
+			this.definitionsRefreshPending = false
+			this.runtimeConfigError = undefined
+			this.ipadRelayError = undefined
 			if (this.config.ipadEnabled && this.config.ipadReceivePort !== this.config.receivePort) {
 				try {
 					this.ipadRelay = new IpadRelay(this, this.config)
@@ -508,9 +657,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 					logger.error(`Unable to start iPad OSC relay: ${String(error)}`)
 				}
 			} else if (this.config.ipadEnabled) {
-				logger.error(
-					`iPad receive port ${this.config.ipadReceivePort} must differ from console receive port ${this.config.receivePort}`,
-				)
+				this.runtimeConfigError = 'iPad Receive Port must differ from Receive Port'
+				this.updateStatus(InstanceStatus.BadConfig, this.runtimeConfigError)
 			}
 			this.mixer = createMixer(this, this.config)
 			this.updateStatus(InstanceStatus.Connecting)
@@ -547,7 +695,16 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			if (generation !== this.discoveryGeneration) return
 		}
 		await this.discoverEntityLists(generation)
+		for (const definition of entityRecordDefinitions().filter(
+			(candidate) => candidate.queryOnStartup && candidate.queryPath,
+		)) {
+			await this.getOscValueOrQuery(definition.queryPath!, 1000)
+			await delay(100)
+			if (generation !== this.discoveryGeneration) return
+		}
 		this.publishCounts()
+		this.discoveryComplete = true
+		if (this.definitionsRefreshPending) this.scheduleDefinitionRefresh()
 	}
 
 	private async waitForConsole(generation: number): Promise<boolean> {
@@ -556,24 +713,45 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			this.dataStore.delete('/Console/Name')
 			await mixer.queryOsc('/Console/Name', undefined, 1000)
 			if (generation !== this.discoveryGeneration || !this.mixer) return false
+			if (mixer.hasReceiveSocketFailed) {
+				this.updateStatus(InstanceStatus.UnknownError, `Receive port ${this.config.receivePort} unavailable`)
+				return false
+			}
 			if (this.dataStore.has('/Console/Name')) {
 				this.handshakeComplete = true
-				this.updateStatus(InstanceStatus.Ok)
+				this.updateConnectedStatus()
+				this.checkAllFeedbacks()
 				return true
 			}
 
-			this.updateStatus(InstanceStatus.UnknownWarning, 'No response received from connected Mixer')
+			if (this.runtimeConfigError) this.updateStatus(InstanceStatus.BadConfig, this.runtimeConfigError)
+			else this.updateStatus(InstanceStatus.UnknownWarning, 'No response received from connected Mixer')
 			const retryAt = Date.now() + 2000
 			while (Date.now() < retryAt && generation === this.discoveryGeneration) {
+				if (mixer.hasReceiveSocketFailed) {
+					this.updateStatus(InstanceStatus.UnknownError, `Receive port ${this.config.receivePort} unavailable`)
+					return false
+				}
 				if (this.dataStore.has('/Console/Name')) {
 					this.handshakeComplete = true
-					this.updateStatus(InstanceStatus.Ok)
+					this.updateConnectedStatus()
+					this.checkAllFeedbacks()
 					return true
 				}
 				await delay(Math.min(100, retryAt - Date.now()))
 			}
 		}
 		return false
+	}
+
+	private updateConnectedStatus(): void {
+		if (this.runtimeConfigError) this.updateStatus(InstanceStatus.BadConfig, this.runtimeConfigError)
+		else if (this.ipadRelayError || this.ipadRelay?.failed)
+			this.updateStatus(
+				InstanceStatus.UnknownWarning,
+				this.ipadRelayError ?? `iPad relay could not open UDP ${this.config.ipadReceivePort}`,
+			)
+		else this.updateStatus(InstanceStatus.Ok)
 	}
 
 	private async discoverEntityLists(generation: number): Promise<void> {
@@ -595,12 +773,19 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	private scheduleDefinitionRefresh(): void {
+		if (!this.discoveryComplete) {
+			this.definitionsRefreshPending = true
+			return
+		}
 		if (this.definitionsTimer) clearTimeout(this.definitionsTimer)
 		this.definitionsTimer = setTimeout(() => {
 			this.definitionsTimer = undefined
+			this.definitionsRefreshPending = false
+			this.parameterChoiceCache.clear()
+			this.entityChoiceCache.clear()
 			this.updateActions()
 			this.updateFeedbacks()
-		}, 100)
+		}, 500)
 	}
 
 	private publishCounts(): void {
@@ -619,6 +804,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	private async stopRuntime(): Promise<void> {
 		this.discoveryGeneration++
+		this.crossfades.clear()
 		this.handshakeComplete = false
 		this.pendingValueReads.clear()
 		if (this.definitionsTimer) clearTimeout(this.definitionsTimer)
@@ -631,7 +817,8 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	private resetConnectionState(): void {
 		this.dataStore.clear()
-		this.feedbackPaths.clear()
+		this.parameterChoiceCache.clear()
+		this.entityChoiceCache.clear()
 		this.publishCounts()
 		this.setVariableValues({ filename: '' })
 	}

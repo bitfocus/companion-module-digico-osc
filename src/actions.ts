@@ -1,5 +1,6 @@
 import type {
 	CompanionActionDefinitions,
+	CompanionActionCallbackContext,
 	CompanionActionEvent,
 	CompanionOptionValues,
 	OSCSomeArguments,
@@ -24,6 +25,19 @@ import { getMappedChoices, getValueSelectorPath } from './valueMappings.js'
 import { getEntityRecordDefinition, hasEntityRoot } from './entityRecords.js'
 
 const logger = createModuleLogger('action')
+
+async function waitForFadeStep(ms: number, signal: AbortSignal): Promise<void> {
+	return new Promise((resolve) => {
+		if (signal.aborted) return resolve()
+		const timer = setTimeout(done, ms)
+		function done() {
+			clearTimeout(timer)
+			signal.removeEventListener('abort', done)
+			resolve()
+		}
+		signal.addEventListener('abort', done, { once: true })
+	})
+}
 
 export type ActionOptions = CompanionOptionValues
 export type ActionsSchema = Record<string, { options: ActionOptions }>
@@ -58,7 +72,11 @@ function selectedPaths(
 }
 
 function valueLabel(row: CommandRow): string {
-	const label = row.name.split('/').pop() || 'Value'
+	const label =
+		row.name
+			.replace(/^\[[^\]]+\]\s*/, '')
+			.split('/')
+			.pop() || 'Value'
 	return row.units ? `${label} (${row.units})` : label
 }
 
@@ -76,12 +94,16 @@ function numberToWire(row: CommandRow, value: number): number {
 	return value / row.scale
 }
 
+function displayStep(row: CommandRow): number {
+	return row.scale < 1 ? row.scale : 1
+}
+
 function wireArguments(row: CommandRow, value: unknown): OSCSomeArguments {
 	const type = oscDataType(row.dataType)
 	if (!type) return []
 	if (type === 'String') return [{ type: 's', value: stringValue(value) }]
 	const number = numberToWire(row, Number(value ?? 0))
-	return type === 'Int' ? [{ type: 'i', value: Math.trunc(number) }] : [{ type: 'f', value: number }]
+	return type === 'Int' ? [{ type: 'i', value: Math.round(number) }] : [{ type: 'f', value: number }]
 }
 
 function interpolate(row: CommandRow, from: number, to: number, progress: number): number {
@@ -133,7 +155,11 @@ function actionOptions(
 	}
 	if (row.valueSelectorLabel) {
 		const root = row.oscPath.split('/').filter(Boolean)[0]
-		const choices = root && hasEntityRoot(root) ? self.getEntityChoices(root) : []
+		const choices = row.valueSelectorSource
+			? self.getIndexedRecordChoices(row.valueSelectorSource)
+			: root && hasEntityRoot(root)
+				? self.getEntityChoices(root)
+				: []
 		options.push({
 			id: 'value',
 			type: 'dropdown',
@@ -157,11 +183,25 @@ function actionOptions(
 		default: Math.min(max, Math.max(min, 0)),
 		min,
 		max,
+		step: displayStep(row),
 		showMinAsNegativeInfinity: row.units.toLowerCase() === 'db' && row.min === -150,
 	})
 	if ((type === 'Int' || type === 'Float') && !isBooleanDataType(row.dataType) && isReadable(row)) {
 		options.push(
-			{ id: 'relative', type: 'checkbox', label: 'Relative', default: false },
+			{ id: 'relative', type: 'checkbox', label: 'Relative', default: false, disableAutoExpression: true },
+			{
+				id: 'delta',
+				type: 'number',
+				label: `Relative change (${row.units || 'units'})`,
+				default: 0,
+				min: -(max - min),
+				max: max - min,
+				step: displayStep(row),
+				isVisibleExpression: '$(options:relative)',
+			},
+			...options
+				.filter((option) => option.id === 'value')
+				.map((option) => ({ ...option, isVisibleExpression: '!$(options:relative)' })),
 			{ id: 'crossfade', type: 'checkbox', label: 'Cross-fade', default: false, disableAutoExpression: true },
 			{
 				id: 'crossfade_duration',
@@ -173,6 +213,8 @@ function actionOptions(
 				isVisibleExpression: '$(options:crossfade)',
 			},
 		)
+		const valueOptionIndex = options.findIndex((option) => option.id === 'value')
+		if (valueOptionIndex >= 0) options.splice(valueOptionIndex, 1)
 	}
 	return options
 }
@@ -198,11 +240,12 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 	]
 	const sectionIds = new Map<string, { item?: string; target?: string; group?: string }>()
 	const schema = actionEndpoint(row)
-	for (const [sectionIndex, section] of sections.entries()) {
+	for (const section of sections) {
+		const sectionKey = encodeURIComponent(section)
 		const visible = `$(options:section) == ${JSON.stringify(section)}`
 		const ids: { item?: string; target?: string; group?: string } = {}
 		if (schema === 'Recall_Preset' || schema === 'Update_Preset') {
-			const item = `preset_${sectionIndex}`
+			const item = `preset_${sectionKey}`
 			ids.item = item
 			const choices = self.getPresetChoicesForSection(section)
 			options.push({
@@ -214,7 +257,7 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 				isVisibleExpression: visible,
 			})
 		} else if (row.oscPath.includes('*')) {
-			const item = `index_1_${sectionIndex}`
+			const item = `index_1_${sectionKey}`
 			ids.item = item
 			const choices =
 				schema === 'Rename_Preset_Group'
@@ -230,7 +273,7 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 			})
 		}
 		if (schema === 'Recall_Preset' || schema === 'Update_Preset' || schema === 'New_Preset') {
-			const target = `target_${sectionIndex}`
+			const target = `target_${sectionKey}`
 			ids.target = target
 			const choices = self.getPresetTargetChoices(section)
 			const targetChoices =
@@ -257,7 +300,7 @@ function presetActionOptions(self: ModuleInstance, row: CommandRow, rows: Comman
 			}
 		}
 		if (schema === 'New_Preset') {
-			const group = `group_${sectionIndex}`
+			const group = `group_${sectionKey}`
 			ids.group = group
 			const choices = self.getPresetGroupChoices(section)
 			options.push({
@@ -371,7 +414,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 						},
 					}
 				: {}),
-			callback: async (event: CompanionActionEvent<ActionOptions>) => {
+			callback: async (event: CompanionActionEvent<ActionOptions>, context: CompanionActionCallbackContext) => {
 				if (presetFields) {
 					const section = stringValue(event.options.section, self.getPresetSections()[0] ?? '')
 					const sectionOption = presetFields.sectionIds.get(section)
@@ -432,6 +475,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 					if (booleanValue && Number(event.options.value) === 2) {
 						const current = await self.getOscValueOrQuery(path)
 						if (typeof current !== 'number' || (current !== 0 && current !== 1)) return
+						self.cancelCrossfade(path)
 						self.send_osc(path, wireArguments(row, current === 0 ? 1 : 0))
 					} else {
 						self.send_osc(path, wireArguments(row, event.options.value))
@@ -464,6 +508,7 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 								logger.warn(`Cannot toggle ${path}: current boolean value is unavailable`)
 								return
 							}
+							self.cancelCrossfade(path)
 							self.send_osc(path, wireArguments(row, current === 0 ? 1 : 0))
 						}),
 					)
@@ -477,32 +522,50 @@ export function UpdateActions(self: ModuleInstance, rows: CommandRow[]): void {
 					const duration = Math.min(60000, Math.max(1, Number(event.options.crossfade_duration ?? 1000)))
 					await Promise.all(
 						paths.map(async (path) => {
-							const raw = await self.getOscValueOrQuery(path)
-							if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-								logger.warn(`Cannot ramp ${path}: current numeric value is unavailable`)
-								return
-							}
-							const current = numberFromWire(row, raw)
-							const entered = Number(value ?? 0)
-							const target = event.options.relative === true ? current + entered : entered
-							if (event.options.crossfade !== true) {
-								self.send_osc(path, wireArguments(row, target))
-								return
-							}
-							const steps = Math.max(1, Math.ceil(duration / 50))
-							for (let step = 1; step <= steps; step++) {
-								self.send_osc(
-									path,
-									wireArguments(row, step === steps ? target : interpolate(row, current, target, step / steps)),
+							const token = event.options.crossfade === true ? self.beginCrossfade(path) : undefined
+							if (!token) self.cancelCrossfade(path)
+							try {
+								const raw = await self.getOscValueOrQuery(path)
+								if (token && (context.signal.aborted || !self.isCrossfadeCurrent(path, token))) return
+								if (typeof raw !== 'number' || !Number.isFinite(raw)) {
+									logger.warn(`Cannot ramp ${path}: current numeric value is unavailable`)
+									return
+								}
+								const current = numberFromWire(row, raw)
+								const entered = Number(event.options.relative === true ? (event.options.delta ?? 0) : (value ?? 0))
+								const target = Math.min(
+									row.max ?? Number.POSITIVE_INFINITY,
+									Math.max(
+										row.min ?? Number.NEGATIVE_INFINITY,
+										event.options.relative === true ? current + entered : entered,
+									),
 								)
-								if (step < steps) await new Promise<void>((resolve) => setTimeout(resolve, duration / steps))
+								if (event.options.crossfade !== true) {
+									self.send_osc(path, wireArguments(row, target))
+									return
+								}
+								if (!token) return
+								const steps = Math.max(1, Math.ceil(duration / 50))
+								for (let step = 1; step <= steps; step++) {
+									if (context.signal.aborted || !self.isCrossfadeCurrent(path, token)) return
+									self.send_osc(
+										path,
+										wireArguments(row, step === steps ? target : interpolate(row, current, target, step / steps)),
+									)
+									if (step < steps) await waitForFadeStep(duration / steps, context.signal)
+								}
+							} finally {
+								if (token && self.isCrossfadeCurrent(path, token)) self.cancelCrossfade(path)
 							}
 						}),
 					)
 					return
 				}
 				const args = wireArguments(row, value)
-				for (const path of paths) self.send_osc(path, args)
+				for (const path of paths) {
+					self.cancelCrossfade(path)
+					self.send_osc(path, args)
+				}
 			},
 		}
 		actions[id] = action

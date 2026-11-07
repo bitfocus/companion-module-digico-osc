@@ -13,6 +13,7 @@ export class IpadRelay {
 	private readonly socket: SharedUdpSocket
 	private readonly socketReady: Promise<void>
 	private listening = false
+	private bindFailed = false
 	private bound = false
 	private stopped = false
 
@@ -21,7 +22,7 @@ export class IpadRelay {
 		private readonly config: ModuleConfig,
 	) {
 		this.socket = instance.createSharedUdpSocket('udp4', (packet, remote) => {
-			if (this.stopped) return
+			if (this.stopped || remote.address !== this.config.ipadIp) return
 			const hasLoggedMessages = this.logPacket('iPad -> module', packet)
 			this.socket.send(packet, this.config.transmitPort, this.config.ip)
 			if (hasLoggedMessages)
@@ -34,8 +35,11 @@ export class IpadRelay {
 			this.socket.once('error', () => resolve())
 		})
 		this.socket.on('error', (error) => {
-			this.listening = false
-			logger.error(`iPad OSC receive error on UDP ${this.config.ipadReceivePort}: ${error.message}`)
+			if (!this.listening) {
+				this.bindFailed = true
+				instance.reportIpadRelayError(`iPad relay could not open UDP ${this.config.ipadReceivePort}: ${error.message}`)
+			}
+			logger.error(`iPad OSC UDP socket error: ${error.message}`)
 		})
 		this.socket.on('listening', () => {
 			this.listening = true
@@ -43,6 +47,10 @@ export class IpadRelay {
 			logger.debug(`Listening for iPad OSC on UDP ${this.config.ipadReceivePort}`)
 		})
 		this.socket.bind(this.config.ipadReceivePort)
+	}
+
+	public get failed(): boolean {
+		return this.bindFailed
 	}
 
 	public forwardConsolePacket(packet: Buffer): void {

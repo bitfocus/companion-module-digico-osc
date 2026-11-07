@@ -1,5 +1,41 @@
 {
 	"records": {
+		"/Layout/Layout/Banks": {
+			"responsePath": "/Layout/Layout/Banks",
+			"fields": {
+				"prefix": ["name", "side", "bank_type", "bank_index"],
+				"repeat": { "count": 12, "fields": ["channel_section", "channel_index"] }
+			},
+			"keyFields": ["name", "side", "bank_type", "bank_index"],
+			"collectRecords": true,
+			"recordArraySelectors": {
+				"position": {
+					"id": "position",
+					"label": "Position",
+					"groupFields": ["side", "bank_type"],
+					"sideLabels": { "L": "Left", "R": "Right" },
+					"indexField": "bank_type",
+					"indexOffset": 1,
+					"labelTemplate": "{sideLabel} Layer {position}"
+				},
+				"bank": {
+					"idPrefix": "bank",
+					"label": "Bank",
+					"positionFields": ["side", "bank_type"],
+					"labelTemplate": "{number}: {name}",
+					"indexField": "bank_index",
+					"nameField": "name"
+				}
+			},
+			"arrayResult": {
+				"count": 12,
+				"sectionField": "channel_section_{index}",
+				"indexField": "channel_index_{index}"
+			},
+			"queryPath": "/Layout/Layout/Banks",
+			"queryOnStartup": true,
+			"emptyChoicesLabel": "No layout banks found"
+		},
 		"/Macros/Buttons/state/*": {
 			"responsePath": "/Macros/Buttons/state",
 			"fields": "index,state,name",
@@ -21,5 +57,6 @@
 			"fields": "index,_1,_2,_3,note"
 		}
 	},
+	"listRoots": ["Macros", "Presets", "Snapshots"],
 	"targetCounts": { "FX": 16 }
 }

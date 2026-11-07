@@ -13,7 +13,19 @@ export type CommandRow = {
 	units: string
 	scale: number
 	feedbackSchema: string
+	feedbackName: string
+	feedbackSelectorLabel: string
+	booleanFeedbackName: string
+	booleanFeedbackDescription: string
+	booleanFeedbackId: string
+	booleanFeedbackStateField: string
+	booleanFeedbackStateLabel: string
+	booleanFeedbackOnValue: number | undefined
+	booleanFeedbackOffValue: number | undefined
+	legacyFeedbackIds: string[]
 	valueSelectorLabel: string
+	valueSelectorSource: string
+	feedbackValueAsBoolean: boolean
 	learnSchema: string
 }
 
@@ -85,8 +97,16 @@ function csvPath(name: string): string {
 
 export function loadCommandTable(): CommandRow[] {
 	const required = ['osc_path', 'data_type', 'osc_min', 'osc_max', 'rw', 'description', 'units', 'Scale']
+	const dataTypes = ['Int', 'Float', 'String', 'BInt', 'BFloat']
 	const parseBound = (value: string | undefined): number | undefined =>
 		value === undefined || value.trim() === '' || !Number.isFinite(Number(value)) ? undefined : Number(value)
+	const parseDataType = (value: string, file: string, row: number): string => {
+		const rawType = value.trim()
+		if (!rawType) return ''
+		const dataType = dataTypes.find((type) => type.toLowerCase() === rawType.toLowerCase())
+		if (!dataType) throw new Error(`Invalid data_type in ${file}, row ${row}: ${rawType}`)
+		return dataType
+	}
 
 	return ['digico_osc.csv', 'digico_entities.csv'].flatMap((filename) => {
 		const file = csvPath(filename)
@@ -97,12 +117,47 @@ export function loadCommandTable(): CommandRow[] {
 		if (lines.length < 2) throw new Error(`DiGiCo OSC command table is empty: ${file}`)
 		const headers = parseCsvLine(lines[0])
 		const columns = Object.fromEntries(
-			[...required, 'feedback_schema'].map((name) => {
+			[
+				...required,
+				'feedback_schema',
+				'feedback_name',
+				'display_name',
+				'feedback_selector_label',
+				'boolean_feedback_name',
+				'boolean_feedback_description',
+				'boolean_feedback_id',
+				'boolean_feedback_state_field',
+				'boolean_feedback_state_label',
+				'boolean_feedback_on_value',
+				'boolean_feedback_off_value',
+				'legacy_feedback_ids',
+				'value_selector_label',
+				'value_selector_source',
+				'feedback_value_as_boolean',
+			].map((name) => {
 				const index = headers.indexOf(name)
 				if (required.includes(name) && index < 0) throw new Error(`Missing "${name}" column in ${file}`)
 				return [name, index]
 			}),
-		) as Record<(typeof required)[number] | 'feedback_schema', number>
+		) as Record<
+			| (typeof required)[number]
+			| 'feedback_schema'
+			| 'feedback_name'
+			| 'display_name'
+			| 'feedback_selector_label'
+			| 'boolean_feedback_name'
+			| 'boolean_feedback_description'
+			| 'boolean_feedback_id'
+			| 'boolean_feedback_state_field'
+			| 'boolean_feedback_state_label'
+			| 'boolean_feedback_on_value'
+			| 'boolean_feedback_off_value'
+			| 'legacy_feedback_ids'
+			| 'value_selector_label'
+			| 'value_selector_source'
+			| 'feedback_value_as_boolean',
+			number
+		>
 		return lines.slice(1).map((line, index) => {
 			const values = parseCsvLine(line)
 			const get = (column: keyof typeof columns) => (columns[column] < 0 ? '' : (values[columns[column]] ?? ''))
@@ -113,9 +168,9 @@ export function loadCommandTable(): CommandRow[] {
 				throw new Error(`Invalid Scale in ${file}, row ${index + 2}: ${get('Scale')}`)
 			}
 			return {
-				name: commandNameFromPath(oscPath),
+				name: get('display_name').trim() || commandNameFromPath(oscPath),
 				oscPath,
-				dataType: get('data_type').trim(),
+				dataType: parseDataType(get('data_type'), file, index + 2),
 				min: parseBound(get('osc_min')),
 				max: parseBound(get('osc_max')),
 				rw: get('rw').trim().toUpperCase(),
@@ -123,7 +178,22 @@ export function loadCommandTable(): CommandRow[] {
 				units: get('units').trim(),
 				scale,
 				feedbackSchema: get('feedback_schema').trim(),
-				valueSelectorLabel: valueSelectorLabelFromPath(oscPath),
+				feedbackName: get('feedback_name').trim(),
+				feedbackSelectorLabel: get('feedback_selector_label').trim(),
+				booleanFeedbackName: get('boolean_feedback_name').trim(),
+				booleanFeedbackDescription: get('boolean_feedback_description').trim(),
+				booleanFeedbackId: get('boolean_feedback_id').trim(),
+				booleanFeedbackStateField: get('boolean_feedback_state_field').trim(),
+				booleanFeedbackStateLabel: get('boolean_feedback_state_label').trim(),
+				booleanFeedbackOnValue: parseBound(get('boolean_feedback_on_value')),
+				booleanFeedbackOffValue: parseBound(get('boolean_feedback_off_value')),
+				legacyFeedbackIds: get('legacy_feedback_ids')
+					.split(';')
+					.map((id) => id.trim())
+					.filter(Boolean),
+				valueSelectorLabel: get('value_selector_label').trim() || valueSelectorLabelFromPath(oscPath),
+				valueSelectorSource: get('value_selector_source').trim(),
+				feedbackValueAsBoolean: get('feedback_value_as_boolean').trim().toLowerCase() === 'true',
 				learnSchema: learnSchemaFromPath(oscPath),
 			}
 		})
