@@ -14,7 +14,7 @@ You can also connect the DiGiCo iPad app to the module, by selecting iPad in the
 - Fix errors and cleanup
 - Add Layout functions
 
-####s 2.0.0
+#### 2.0.0
 
 - Version change only to appear after the current 1.0.4
 
