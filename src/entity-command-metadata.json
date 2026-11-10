@@ -1,0 +1,26 @@
+{
+	"/Macros/Buttons/state/*": {
+		"display_name": "[Macros] OSC Macro State Value",
+		"feedback_selector_label": "Macro",
+		"boolean_feedback_name": "[Macros] OSC Macro State",
+		"boolean_feedback_description": "True when the OSC Macro matches the selected state.",
+		"boolean_feedback_id": "macroButtonState",
+		"boolean_feedback_state_field": "state",
+		"boolean_feedback_state_label": "State",
+		"boolean_feedback_on_value": "1",
+		"boolean_feedback_off_value": "0",
+		"legacy_feedback_ids": "macroStatus",
+		"feedback_value_as_boolean": "true"
+	},
+	"/Macros/Buttons/count": {
+		"display_name": "[Macros] OSC Macros Count"
+	},
+	"/Macros/Buttons/press": {
+		"display_name": "[Macros] OSC Macro Press",
+		"value_selector_label": "Macro",
+		"value_selector_source": "/Macros/Buttons/state"
+	},
+	"/Layout/Layout/Banks": {
+		"feedback_name": "[Layout] Bank Channels"
+	}
+}

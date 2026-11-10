@@ -67,6 +67,8 @@ Choose the relevant DiGiCo action and select the channel, output, snapshot, macr
 
 On/off actions provide **Off**, **On**, and **Toggle** where the console command supports them. Toggle reads the current console value before sending the opposite state.
 
+To create actions from console operations, start Companion's **Action Recorder**, then make changes on the console. Supported console functions will create actions. Stop recording when finished; Companion adds the matching DiGiCo actions to its recorder results, ready for you to review and add to buttons. Click "Finish" in the Action Recorder and then pick an existing button to add/replace the actions on. The recorder captures incoming OSC updates while it is active, so make sure the module is connected and the console sends feedback to Companion. You can also use the offline editor in place of the console for offline action creation.
+
 ## Using feedbacks
 
 Value feedbacks report the selected console value for expressions and Companion logic. Their results can also drive text or internal actions. For button coloring, use the matching **(On)** boolean feedback for supported on/off parameters; set its feedback style in Companion to choose the active color. **[Macros] OSC button state** is a boolean feedback for macro buttons.

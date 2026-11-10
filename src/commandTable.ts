@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import entityCommandMetadata from './entity-command-metadata.json' with { type: 'json' }
+
+const entityMetadata = entityCommandMetadata as Record<string, Record<string, string>>
 
 export type CommandRow = {
 	name: string
@@ -160,9 +163,10 @@ export function loadCommandTable(): CommandRow[] {
 		>
 		return lines.slice(1).map((line, index) => {
 			const values = parseCsvLine(line)
-			const get = (column: keyof typeof columns) => (columns[column] < 0 ? '' : (values[columns[column]] ?? ''))
-			const oscPath = get('osc_path').trim()
+			const getCsv = (column: keyof typeof columns) => (columns[column] < 0 ? '' : (values[columns[column]] ?? ''))
+			const oscPath = getCsv('osc_path').trim()
 			if (!oscPath) throw new Error(`Missing OSC path in ${file}, row ${index + 2}`)
+			const get = (column: keyof typeof columns) => entityMetadata[oscPath]?.[column] ?? getCsv(column)
 			const scale = Number(get('Scale'))
 			if (!Number.isFinite(scale) || scale <= 0) {
 				throw new Error(`Invalid Scale in ${file}, row ${index + 2}: ${get('Scale')}`)

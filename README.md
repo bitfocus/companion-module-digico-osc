@@ -9,7 +9,7 @@ You can also connect the DiGiCo iPad app to the module, by selecting iPad in the
 
 ## Version History
 
-### 2.1.1
+### 2.1.2
 
 - Fix errors and cleanup
 - Add Layout functions
