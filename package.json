@@ -1,6 +1,6 @@
 {
 	"name": "digico",
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {
@@ -24,7 +24,7 @@
 		"yarn": "^4"
 	},
 	"dependencies": {
-		"@companion-module/base": "~2.2.0"
+		"@companion-module/base": "~2.2.2"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^3.1.0",

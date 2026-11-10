@@ -70,6 +70,8 @@ export class digico {
 		this.socket.on('error', (error) => {
 			if (!this.receiveSocketListening) {
 				this.receiveSocketUnavailable = true
+				this.activeQueryPath = undefined
+				this.wakeSendQueue()
 				instance.updateStatus(InstanceStatus.UnknownError, `OSC receive socket error: ${error.message}`)
 				logger.error(`OSC receive socket error: ${error.message}`)
 			} else {

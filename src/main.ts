@@ -65,6 +65,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	private readonly crossfades = new Map<string, symbol>()
 	private readonly pendingValueReads = new Map<string, Promise<JsonValue | undefined>>()
 	private readonly notificationQueries = new Set<string>()
+	private readonly loadedRecordLists = new Set<string>()
 	private readonly entityRefreshes = new Map<string, Promise<void>>()
 	private readonly entityRefreshWaiters = new Map<string, Array<() => void>>()
 	private readonly actionRecorder = new IncomingActionRecorder((action, uniqueId) =>
@@ -166,28 +167,28 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 	}
 
 	public getParameterChoices(path: string, axis: number): Array<{ id: number | string; label: string }> {
-		const cacheKey = `${path}|${axis}`
-		const cached = this.parameterChoiceCache.get(cacheKey)
-		if (cached) return cached
 		const segment = getPathAxisSegment(path, axis)
 		const provider = selectorProviderForSegment(segment, this.selectorProviders)
+		const cacheKey = provider ? `provider:${provider.key}` : `${path}|${axis}`
+		const cached = this.parameterChoiceCache.get(cacheKey)
+		if (cached) return cached
 		const choicesByIndex = new Set<number>()
-		const matcher = pathMatcher(path)
-		for (const cachedPath of this.dataStore.keys()) {
-			const match = cachedPath.match(matcher)
-			const index = Number(match?.[axis + 1])
-			if (Number.isInteger(index)) choicesByIndex.add(index)
+		if (!provider) {
+			const matcher = pathMatcher(path)
+			for (const cachedPath of this.dataStore.keys()) {
+				const match = cachedPath.match(matcher)
+				const index = Number(match?.[axis + 1])
+				if (Number.isInteger(index)) choicesByIndex.add(index)
+			}
 		}
 
 		const names = new Map<number, string>()
 		const cachedCount = provider ? this.dataStore.get(provider.countPath) : undefined
 		const count = typeof cachedCount === 'number' ? cachedCount : undefined
 		if (provider) {
-			const nameMatcher = pathMatcher(provider.namePath)
-			for (const [cachedPath, value] of this.dataStore) {
-				const match = cachedPath.match(nameMatcher)
-				const index = Number(match?.[1])
-				if (Number.isInteger(index) && typeof value === 'string') {
+			for (let index = 1; index <= provider.maxCount; index++) {
+				const value = this.dataStore.get(provider.namePath.replace('*', String(index)))
+				if (typeof value === 'string') {
 					names.set(index, value)
 					choicesByIndex.add(index)
 				}
@@ -450,6 +451,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		}
 		const cached = getRecord()
 		if (cached) return cached
+		if (this.loadedRecordLists.has(queryPath)) return undefined
 		await this.getOscValueOrQuery(queryPath, timeoutMs)
 		const deadline = Date.now() + timeoutMs
 		while (Date.now() < deadline) {
@@ -550,11 +552,18 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 		const record = isNotification ? undefined : parseEntityRecord(path, incoming)
 		const root = record ? record.schemaPath.split('/').filter(Boolean)[0] : undefined
 		const recordDefinition = record ? getEntityRecordDefinition(record.schemaPath) : undefined
-		const newEntityRecord = record !== undefined && !this.dataStore.has(`${record.schemaPath}|${record.key}`)
-		const previous = isNotification ? undefined : this.dataStore.get(path)
+		const recordCacheKey = record ? `${record.schemaPath}|${record.key}` : undefined
+		const previous = isNotification
+			? undefined
+			: recordCacheKey
+				? this.dataStore.get(recordCacheKey)
+				: this.dataStore.get(path)
+		const newEntityRecord = record !== undefined && previous === undefined
 		let cachedValue: JsonValue | undefined
 		if (!isNotification) {
 			if (record) {
+				const definition = getEntityRecordDefinition(record.schemaPath)
+				if (definition?.queryPath) this.loadedRecordLists.add(definition.queryPath)
 				this.dataStore.set(`${record.schemaPath}|${record.key}`, record.value)
 				if (record.index !== undefined && record.key === String(record.index))
 					this.dataStore.set(`${record.schemaPath}|${record.index}`, record.value)
@@ -584,6 +593,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 				const root = queryPath.split('/').filter(Boolean)[0]
 				if (queryPath === `/${root}` && entityRoots().includes(root)) void this.refreshEntityList(root, true)
 				for (const definition of entityRecordDefinitions().filter((candidate) => candidate.queryPath === queryPath)) {
+					this.loadedRecordLists.delete(definition.queryPath!)
 					this.dataStore.delete(definition.responsePath)
 					for (const key of this.dataStore.keys())
 						if (key.startsWith(`${definition.responsePath}|`)) this.dataStore.delete(key)
@@ -725,7 +735,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 			}
 
 			if (this.runtimeConfigError) this.updateStatus(InstanceStatus.BadConfig, this.runtimeConfigError)
-			else this.updateStatus(InstanceStatus.UnknownWarning, 'No response received from connected Mixer')
+			else this.updateStatus(InstanceStatus.ConnectionFailure, 'No response received from connected Mixer')
 			const retryAt = Date.now() + 2000
 			while (Date.now() < retryAt && generation === this.discoveryGeneration) {
 				if (mixer.hasReceiveSocketFailed) {
@@ -817,6 +827,7 @@ export default class ModuleInstance extends InstanceBase<ModuleSchema> {
 
 	private resetConnectionState(): void {
 		this.dataStore.clear()
+		this.loadedRecordLists.clear()
 		this.parameterChoiceCache.clear()
 		this.entityChoiceCache.clear()
 		this.publishCounts()

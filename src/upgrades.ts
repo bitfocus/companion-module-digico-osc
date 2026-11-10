@@ -129,6 +129,23 @@ function migrateAction(
 			}
 		}
 	}
+
+	if (action.actionId === 'macros') {
+		const old = action.options.macro
+		if (isWrappedValue(old) && old.isExpression)
+			return {
+				...action,
+				actionId: '/Macros/Buttons/press',
+				options: { value: { isExpression: true, value: `(${String(old.value)}) - 1` } },
+			}
+		const index = Number(isWrappedValue(old) ? old.value : old) - 1
+		return {
+			...action,
+			actionId: '/Macros/Buttons/press',
+			options: { value: { isExpression: false, value: Number.isInteger(index) ? index : 0 } },
+		}
+	}
+
 	return { ...action, actionId: mapping.actionId, options }
 }
 

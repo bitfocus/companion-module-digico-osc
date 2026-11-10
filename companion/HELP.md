@@ -2,7 +2,7 @@
 
 Configure a **DiGiCo Pad** external-control device on the console, then configure the DiGiCo module with the matching network ports. The steps below apply to SD and Quantum consoles; the required Commands Allowed file depends on the console family.
 
-The examples use UDP ports `7000` and `7001` for OSC communication. These differ from Companion's default Web UI port `8000`.
+The examples use UDP ports `7000` and `7001` for OSC communication. These are used so as to not conflict with Companion's default Web UI port `8000`.
 
 ### 1. Enable External Control
 
@@ -34,11 +34,11 @@ After loading, confirm the command list is populated and **No commands are enabl
 
 In the module, use the console's **Local IP Address** from the External Control window as the destination, and set the ports as follows:
 
-| Module setting        | Value                        |
-| --------------------- | ---------------------------- |
-| Receive/listen port   | `7000`                       |
-| Send destination port | `7001`                       |
-| Send destination IP   | Console **Local IP Address** |
+| Module setting   | Value                        |
+| ---------------- | ---------------------------- |
+| Receive Port     | `7000`                       |
+| Transmit Port    | `7001`                       |
+| Mixer IP Address | Console **Local IP Address** |
 
 The port numbers are from the console's perspective: its **Rcv 7001** receives Companion commands, and its **Send 7000** sends console feedback to the Companion computer.
 
@@ -69,7 +69,9 @@ On/off actions provide **Off**, **On**, and **Toggle** where the console command
 
 ## Using feedbacks
 
-Value feedbacks report the selected console value for expressions and Companion logic. Their results can also drive text or internal actions. For button coloring, use the matching **(On)** boolean feedback for supported on/off parameters; set its feedback style in Companion to choose the active color. **Macro button state** is a boolean feedback for macro buttons.
+Value feedbacks report the selected console value for expressions and Companion logic. Their results can also drive text or internal actions. For button coloring, use the matching **(On)** boolean feedback for supported on/off parameters; set its feedback style in Companion to choose the active color. **[Macros] OSC button state** is a boolean feedback for macro buttons.
+
+When upgrading the legacy **Change button color for macro state** feedback, its **Use Console Macro Name** option is not carried over. The replacement **[Macros] OSC Macro State** feedback controls colors only; set the button text separately if you want it to show the macro's name.
 
 ## Variables
 
